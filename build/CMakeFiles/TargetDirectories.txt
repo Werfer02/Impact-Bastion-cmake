@@ -1,3 +1,0 @@
-/home/Jacek/Projects/other_repos/Impact-Bastion/build/CMakeFiles/Impact-Bastion.dir
-/home/Jacek/Projects/other_repos/Impact-Bastion/build/CMakeFiles/edit_cache.dir
-/home/Jacek/Projects/other_repos/Impact-Bastion/build/CMakeFiles/rebuild_cache.dir
