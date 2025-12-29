@@ -18,7 +18,7 @@ set(EXECUTABLE_RESOURCES_DIR "${CMAKE_SOURCE_DIR}/impact_bastion/resources")
 
 add_custom_command(TARGET Impact-Bastion POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${EXECUTABLE_RESOURCES_DIR}/Roboto-bold.ttf" "${CMAKE_BINARY_DIR}/$<CONFIG>"
+    "${EXECUTABLE_RESOURCES_DIR}/Roboto-Bold.ttf" "${CMAKE_BINARY_DIR}/$<CONFIG>"
 )
 
 if (MSVC)
