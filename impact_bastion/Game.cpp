@@ -7,9 +7,10 @@ void Game::initVariables()
 
     //Game logic
     this->points = 0;
-    this->enemySpawnTimerMax = 1000.f;
+    this->enemySpawnTimerMax = 10.f;
     this->enemySpawnTimer = this->enemySpawnTimerMax;
     this->maxEnemies = 3;
+    this->mouseHeld = false;
 }
 
 void Game::initWindow()
@@ -25,8 +26,8 @@ void Game::initEnemies()
     this->enemy.setSize(sf::Vector2f(100.f, 100.f));
     this->enemy.setScale(sf::Vector2f(0.33f, 0.33f));
     this->enemy.setFillColor(sf::Color::Yellow);
-    this->enemy.setOutlineColor(sf::Color::Cyan);
-    this->enemy.setOutlineThickness(3.f);
+    //this->enemy.setOutlineColor(sf::Color::Cyan);
+    //this->enemy.setOutlineThickness(3.f);
 }
 
 //Constructors / Destructors
@@ -93,7 +94,7 @@ void Game::updateMousePositions()
 {
     //Mouse position relative to window
     this->mousePosWindow = sf::Mouse::getPosition(*this->window);
-
+    this->mousePosView = this->window->mapPixelToCoords(this->mousePosWindow);
 
 }
 
@@ -112,11 +113,41 @@ void Game::updateEnemies()
         }
     }
 
-    //Move the enemies
+    //Moving and updating enemies
 
-    for (auto& e : this->enemies) {
-        e.move({ 2.f, 0.f });
+    for (int i = 0; i< this->enemies.size(); i=i+1) {
+
+        bool deleted = false;
+
+        this->enemies[i].move({ 2.f,0.f });
+        if (this->enemies[i].getPosition().x > this->window->getSize().x) {
+            this->enemies.erase(this->enemies.begin() + i);
+        }
     }
+
+
+    //Check if clicked upon
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+        if (this->mouseHeld == false) {
+            this->mouseHeld == true;
+            bool deleted = false;
+            for (int i = 0; i < this->enemies.size() && deleted == false; i = i + 1) {
+                if (this->enemies[i].getGlobalBounds().contains(this->mousePosView)) {
+                    deleted = true;
+                    this->enemies.erase(this->enemies.begin() + i);
+
+
+
+                    //Gain points
+                    this->points += 10.f;
+                }
+
+            }
+        }
+    }else {
+        this->mouseHeld = false;
+    }
+    
 
     
 }
