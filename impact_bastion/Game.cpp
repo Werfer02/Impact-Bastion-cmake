@@ -1,6 +1,16 @@
 #include "Game.h"
 
 //Private functions
+void Game::initFonts() {
+    if (!this->font.openFromFile("Roboto-Bold.ttf")) {
+        std::cout << "Failed to load font!";
+    }
+}
+void Game::initText() {
+    this->uiText.setCharacterSize(24);
+    this->uiText.setFillColor(sf::Color::White);
+    this->uiText.setString("NONE");
+}
 void Game::initVariables()
 {
 	this->window = nullptr;
@@ -31,10 +41,13 @@ void Game::initEnemies()
 }
 
 //Constructors / Destructors
-Game::Game() {
+Game::Game():uiText(this->font) {
+    this->initFonts();
+    this->initText();
 	this->initVariables();
 	this->initWindow();
     this->initEnemies();
+    
 }
 Game::~Game() {
 	delete this->window;
@@ -170,7 +183,7 @@ void Game::updateEnemies()
                     this->enemies.erase(this->enemies.begin() + i);
               
                     //Gain points
-                    this->points += 10.f;
+                    this->points += 10;
 
                     break;
                 }
@@ -192,6 +205,10 @@ void Game::update()
     this->updateMousePositions();
     this->updateEnemies();
 
+    //Update points
+    std::stringstream ss;
+    ss << "Points: " << this->points;
+    this->uiText.setString(ss.str());
   
 }
 
@@ -211,6 +228,8 @@ void Game::render()
 
     //Draw game objects
     this->renderEnemies();
+
+    this->window->draw(this->uiText);
 
 
     this->window->display();

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <ctime>
+#include <sstream>
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
@@ -32,6 +33,9 @@ private:
 	int maxEnemies;
 	bool mouseHeld;
 	
+	//Text
+	sf::Font font;
+	sf::Text uiText;
 
 	//Game objects
 	struct EnemyData {
@@ -46,7 +50,10 @@ private:
 	//Private functions
 	void initVariables();
 	void initWindow();
+	void initFonts();
+	void initText();
 	void initEnemies();
+	
 public:
 	//Constructors /Destructors
 	Game();
