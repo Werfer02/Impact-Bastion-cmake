@@ -63,7 +63,7 @@ void Game::spawnEnemy()
     //Spawn enemy
     this->enemies.push_back(this->enemy);
 
-    //Remove enemies at end of screen
+    
 
 }
 
