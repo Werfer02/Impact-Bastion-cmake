@@ -1,9 +1,0 @@
-.vs/
-*.ipch
-*.obj
-*.exe
-*.pdb
-*.db
-out/
-Debug/
-Release/
