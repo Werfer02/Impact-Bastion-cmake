@@ -6,3 +6,4 @@ x64/
 impact-bastion/x64/
 impact-bastion/*.vcxproj
 impact-bastion/*.vcxproj
+build/
