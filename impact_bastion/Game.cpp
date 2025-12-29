@@ -52,18 +52,18 @@ const bool Game::running() const
 //Functions
 void Game::spawnEnemy()
 {
-    this->enemy.setPosition({
-        0.f,
-        static_cast<float>(rand() % static_cast<int>(this->window->getSize().y - this->enemy.getSize().y))
-
-        });
-
-    this->enemy.setFillColor(sf::Color::Green);
-
+    EnemyData newEnemy;
     //Spawn enemy
-    this->enemies.push_back(this->enemy);
+    newEnemy.shape = this->enemy;
+    newEnemy.shape.setPosition({ 5.f,static_cast<float>(rand() % static_cast<int>(this->window->getSize().y - this->enemy.getSize().y)) });
+    newEnemy.shape.setFillColor(sf::Color::Green);
 
+    //HP points of enemy
+    newEnemy.hp = 3;
+
+    newEnemy.velocity = sf::Vector2f(2.f, 2.f);
     
+    this->enemies.push_back(newEnemy);
 
 }
 
@@ -115,31 +115,64 @@ void Game::updateEnemies()
 
     //Moving and updating enemies
 
-    for (int i = 0; i< this->enemies.size(); i=i+1) {
+    for (int i = 0; i< this->enemies.size();) {
+        bool hitWall = false;
+        this->enemies[i].shape.move(this->enemies[i].velocity);
+        
+        sf::Vector2f pos = this->enemies[i].shape.getPosition();
+        sf::Vector2f size = this->enemies[i].shape.getSize() * this->enemies[i].shape.getScale().x;
 
-        bool deleted = false;
-
-        this->enemies[i].move({ 2.f,0.f });
-        if (this->enemies[i].getPosition().x > this->window->getSize().x) {
-            this->enemies.erase(this->enemies.begin() + i);
+        //Bouncing from top and bottom
+        if (pos.y <= 0.f || pos.y + size.y >= this->window->getSize().y) {
+            this->enemies[i].velocity.y *= -1.f;
+            hitWall = true;
         }
+
+        //Bouncing from the left
+        if (pos.x <= 0.f) {
+            this->enemies[i].velocity.x *= -1.f;
+            hitWall = true;
+        }
+
+        //Bouncing from the right
+        if (pos.x + size.x >= this->window->getSize().x) {
+            this->enemies[i].velocity.x *= -1.f;
+            hitWall = true;
+        }
+
+        if (hitWall) {
+            this->enemies[i].hp -= 1;
+
+            if (this->enemies[i].hp == 2) {
+                this->enemies[i].shape.setFillColor(sf::Color::Yellow);
+            }
+            if (this->enemies[i].hp == 1) {
+                this->enemies[i].shape.setFillColor(sf::Color::Red);
+            }
+        }
+        if (this->enemies[i].hp <= 0) {
+            this->enemies.erase(this ->enemies.begin() + i);
+        }
+        else {
+            i++;
+        }
+       
     }
 
 
     //Check if clicked upon
     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
         if (this->mouseHeld == false) {
-            this->mouseHeld == true;
-            bool deleted = false;
-            for (int i = 0; i < this->enemies.size() && deleted == false; i = i + 1) {
-                if (this->enemies[i].getGlobalBounds().contains(this->mousePosView)) {
-                    deleted = true;
+            this->mouseHeld = true;
+            
+            for (int i = 0; i < this->enemies.size(); i = i + 1) {
+                if (this->enemies[i].shape.getGlobalBounds().contains(this->mousePosView)) {
                     this->enemies.erase(this->enemies.begin() + i);
-
-
-
+              
                     //Gain points
                     this->points += 10.f;
+
+                    break;
                 }
 
             }
@@ -166,7 +199,7 @@ void Game::renderEnemies()
 {
     //Rendering all the enemies
     for (auto& e : this->enemies) {
-        this->window->draw(e);
+        this->window->draw(e.shape);
     }
 
 }

@@ -1,6 +1,3 @@
 ﻿  Game.cpp
-C:\Users\sowam\Documents\GitHub\Impact-Bastion\impact_bastion\Game.cpp(132,29): warning C4553: „==”: Wynik wyrażenia nie jest używany; czy chodziło Ci o „=”?
-C:\Users\sowam\Documents\GitHub\Impact-Bastion\impact_bastion\Game.cpp(142,37): warning C4244: "+=": konwersja z "float" do "unsigned int", możliwa utrata danych
-  main.cpp
-  Generowanie kodu...
+C:\Users\sowam\Documents\GitHub\Impact-Bastion\impact_bastion\Game.cpp(173,37): warning C4244: "+=": konwersja z "float" do "unsigned int", możliwa utrata danych
   impact_bastion.vcxproj -> C:\Users\sowam\Documents\GitHub\Impact-Bastion\x64\Debug\impact_bastion.exe

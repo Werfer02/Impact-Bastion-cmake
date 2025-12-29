@@ -31,10 +31,17 @@ private:
 	float enemySpawnTimerMax;
 	int maxEnemies;
 	bool mouseHeld;
+	
 
 	//Game objects
-	std::vector<sf::RectangleShape> enemies;
+	struct EnemyData {
+		sf::RectangleShape shape;
+		int hp;
+		sf::Vector2f velocity;
+	};
+	std::vector<EnemyData> enemies;
 	sf::RectangleShape enemy;
+	
 
 	//Private functions
 	void initVariables();
