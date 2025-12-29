@@ -15,17 +15,15 @@ target_link_libraries(Impact-Bastion PRIVATE
                                      sfml-window)
 
 set(EXECUTABLE_RESOURCES_DIR "${CMAKE_SOURCE_DIR}/impact_bastion/resources")
+
 add_custom_command(TARGET Impact-Bastion POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${EXECUTABLE_RESOURCES_DIR}/Roboto-bold.ttf" "${CMAKE_BINARY_DIR}"
+    "${EXECUTABLE_RESOURCES_DIR}/Roboto-bold.ttf" "${CMAKE_BINARY_DIR}/$<CONFIG>"
 )
 
 if (MSVC)
-    set(EXECUTABLE_DIR "${CMAKE_BINARY_DIR}/$<CONFIG>")
-    set(MSVC_BUILD_EXECUTABLE_RESOURCES_DIR "${EXECUTABLE_RESOURCES_DIR}/$<CONFIG>")
-
     add_custom_command(TARGET Impact-Bastion POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-        "${EXECUTABLE_RESOURCES_DIR}" "${EXECUTABLE_DIR}"
+        "${EXECUTABLE_RESOURCES_DIR}/$<CONFIG>" "${CMAKE_BINARY_DIR}/$<CONFIG>"
     )
 endif()
