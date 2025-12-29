@@ -1,8 +1,10 @@
 #include "Game.h"
 
+#include <filesystem>
+
 //Private functions
 void Game::initFonts() {
-    if (!this->font.openFromFile("Roboto-Bold.ttf")) {
+    if (!this->font.openFromFile(std::filesystem::path("./Roboto-Bold.ttf"))) {
         std::cout << "Failed to load font!";
     }
 }
