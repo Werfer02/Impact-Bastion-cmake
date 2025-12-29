@@ -15,7 +15,7 @@ target_link_libraries(Impact-Bastion PRIVATE
                                      sfml-window)
 
 if (MSVC)
-    set(EXECUTABLE_RESOURCES_DIR "${CMAKE_SOURCE_DIR}/impact_bastion/resources")
+    set(EXECUTABLE_RESOURCES_DIR "${CMAKE_SOURCE_DIR}/impact_bastion/resources/$<CONFIG>")
     set(EXECUTABLE_DIR "${CMAKE_BINARY_DIR}/$<CONFIG>")
 
     add_custom_command(TARGET Impact-Bastion POST_BUILD
