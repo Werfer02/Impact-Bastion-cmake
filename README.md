@@ -54,4 +54,4 @@ The built executable along with the required resources will be located in build/
 
 ### Note for all builds
 
-Make sure the executable is run inside the directory it's located in or it won't be able to access the necessary resources
+Make sure the executable is run inside the directory it's located in or it won't be able to access the required resources
