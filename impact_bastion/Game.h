@@ -47,6 +47,8 @@ private:
 	sf::RectangleShape enemy;
 	
 
+
+
 	//Private functions
 	void initVariables();
 	void initWindow();
