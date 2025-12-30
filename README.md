@@ -28,7 +28,7 @@ cmake --build build --config debug
 The built executable along with the required resources will be located in build/(whatever config you chose)/  
 
 If it seems that the build directory is not visible but you have not encountered any errors in the build process, it is likely because newer versions of Visual Studio automatically hide any files listed in the .gitignore.  
-This can be disabled on most versions but if it can't on yours, you can just comment it out.  
+This can be disabled on most versions but if it can't on yours, you can just comment it out.
 
 ### Linux
 
@@ -51,3 +51,7 @@ cmake -S . -B build
 cmake --build build
 ```
 The built executable along with the required resources will be located in build/
+
+### Note for all builds
+
+Make sure the executable is run inside the directory it's located in or it won't be able to access the necessary resources
