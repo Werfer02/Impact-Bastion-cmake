@@ -17,7 +17,7 @@ void Game::initVariables()
 
     //Game logic
     this->points = 0;
-    this->enemySpawnTimerMax = 10.f;
+    this->enemySpawnTimerMax = 30.f;
     this->enemySpawnTimer = this->enemySpawnTimerMax;
     this->maxEnemies = 3;
     this->mouseHeld = false;
@@ -133,25 +133,52 @@ void Game::updateEnemies()
         this->enemies[i].shape.move(this->enemies[i].velocity);
         
         sf::Vector2f pos = this->enemies[i].shape.getPosition();
-        sf::Vector2f size = this->enemies[i].shape.getSize() * this->enemies[i].shape.getScale().x;
+        sf::Vector2f size = {
+            this->enemies[i].shape.getSize().x * this->enemies[i].shape.getScale().x,
+            this->enemies[i].shape.getSize().y * this->enemies[i].shape.getScale().y,
+
+        };
 
         //Bouncing from top and bottom
-        if (pos.y <= 0.f || pos.y + size.y >= this->window->getSize().y) {
-            this->enemies[i].velocity.y *= -1.f;
+        if (pos.y <= 0.f) { //top
+            this->enemies[i].velocity.y *= -1.05f; 
+            this->enemies[i].shape.setPosition({ pos.x, 0.f });
+            this->enemies[i].shape.setScale({ 0.45f, 0.25f }); // Squash effect
+            hitWall = true;
+        }
+        else if (pos.y + size.y >= this->window->getSize().y) { //bottom
+            this->enemies[i].velocity.y *= -1.05f;
+            this->enemies[i].shape.setPosition({ pos.x, this->window->getSize().y - size.y });
+            this->enemies[i].shape.setScale({ 0.45f, 0.25f });
             hitWall = true;
         }
 
-        //Bouncing from the left
-        if (pos.x <= 0.f) {
-            this->enemies[i].velocity.x *= -1.f;
+        //Sides
+        if (pos.x <= 0.f) { // Left
+            this->enemies[i].velocity.x *= -1.05f;
+            this->enemies[i].shape.setPosition({ 0.f, pos.y });
+            this->enemies[i].shape.setScale({ 0.25f, 0.45f });
+            hitWall = true;
+        }
+        else if (pos.x + size.x >= this->window->getSize().x) { // Right
+            this->enemies[i].velocity.x *= -1.05f;
+            this->enemies[i].shape.setPosition({ this->window->getSize().x - size.x, pos.y });
+            this->enemies[i].shape.setScale({ 0.25f, 0.45f });
             hitWall = true;
         }
 
-        //Bouncing from the right
-        if (pos.x + size.x >= this->window->getSize().x) {
-            this->enemies[i].velocity.x *= -1.f;
-            hitWall = true;
-        }
+
+        //Squash & Stretch
+        sf::Vector2f currentScale = this->enemies[i].shape.getScale();
+        float targetScale = 0.33f; // from initEnemies
+        float recoverySpeed = 0.01f;
+
+        if (currentScale.x < targetScale) currentScale.x += recoverySpeed;
+        if (currentScale.x > targetScale) currentScale.x -= recoverySpeed;
+        if (currentScale.y < targetScale) currentScale.y += recoverySpeed;
+        if (currentScale.y > targetScale) currentScale.y -= recoverySpeed;
+        this->enemies[i].shape.setScale(currentScale);
+
 
         if (hitWall) {
             this->enemies[i].hp -= 1;
@@ -178,16 +205,30 @@ void Game::updateEnemies()
         if (this->mouseHeld == false) {
             this->mouseHeld = true;
             
-            for (int i = 0; i < this->enemies.size(); i = i + 1) {
+            for (int i = 0; i < this->enemies.size(); i ++) {
                 if (this->enemies[i].shape.getGlobalBounds().contains(this->mousePosView)) {
-                    this->enemies.erase(this->enemies.begin() + i);
-              
-                    //Gain points
-                    this->points += 10;
+
+                    this->enemies[i].hp -= 1;
+
+
+                    if (this->enemies[i].hp == 2) {
+                        this->enemies[i].shape.setFillColor(sf::Color::Yellow);
+                    }
+                    else if (this->enemies[i].hp == 1) {
+                        this->enemies[i].shape.setFillColor(sf::Color::Red);
+                    }
+
+
+                    if (this->enemies[i].hp <= 0) {
+                        this->enemies.erase(this->enemies.begin() + i);
+
+                        // Gain points after destroy
+                        this->points += 10;
+                    }
+
 
                     break;
                 }
-
             }
         }
     }else {
