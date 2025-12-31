@@ -145,12 +145,14 @@ void Game::updateEnemies()
         if (pos.y <= 0.f) { //top
             this->enemies[i].velocity.y *= -1.05f; 
             this->enemies[i].shape.setPosition({ pos.x, 0.f });
+            this->enemies[i].shape.setOrigin({size.x * 0.5f, size.y});
             this->enemies[i].shape.setScale({ 0.45f, 0.25f }); // Squash effect
             hitWall = true;
         }
         else if (pos.y + size.y >= this->window->getSize().y) { //bottom
             this->enemies[i].velocity.y *= -1.05f;
             this->enemies[i].shape.setPosition({ pos.x, this->window->getSize().y - size.y });
+            this->enemies[i].shape.setOrigin({size.x * 0.5f, 0.0f});
             this->enemies[i].shape.setScale({ 0.45f, 0.25f });
             hitWall = true;
         }
@@ -159,12 +161,14 @@ void Game::updateEnemies()
         if (pos.x <= 0.f) { // Left
             this->enemies[i].velocity.x *= -1.05f;
             this->enemies[i].shape.setPosition({ 0.f, pos.y });
+            this->enemies[i].shape.setOrigin({0.0f, size.y * 0.5f});
             this->enemies[i].shape.setScale({ 0.25f, 0.45f });
             hitWall = true;
         }
         else if (pos.x + size.x >= this->window->getSize().x) { // Right
             this->enemies[i].velocity.x *= -1.05f;
             this->enemies[i].shape.setPosition({ this->window->getSize().x - size.x, pos.y });
+            this->enemies[i].shape.setOrigin({size.x, size.y * 0.5f});
             this->enemies[i].shape.setScale({ 0.25f, 0.45f });
             hitWall = true;
         }
