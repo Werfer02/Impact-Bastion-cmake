@@ -4,62 +4,62 @@
 
 //Private functions
 void Game::initFonts() {
-    if (!this->font.openFromFile(std::filesystem::path("./Roboto-Bold.ttf"))) {
+    if (!font.openFromFile(std::filesystem::path("./Roboto-Bold.ttf"))) {
         std::cout << "Failed to load font!";
     }
 }
 void Game::initText() {
-    this->uiText.setCharacterSize(24);
-    this->uiText.setFillColor(sf::Color::White);
-    this->uiText.setString("NONE");
+    uiText.setCharacterSize(24);
+    uiText.setFillColor(sf::Color::White);
+    uiText.setString("NONE");
 }
 void Game::initVariables()
 {
-	this->window = nullptr;
+	window = nullptr;
 
     //Game logic
-    this->points = 0;
-    this->enemySpawnTimerMax = 30.f;
-    this->enemySpawnTimer = this->enemySpawnTimerMax;
-    this->maxEnemies = 3;
-    this->mouseHeld = false;
+    points = 0;
+    enemySpawnTimerMax = 30.f;
+    enemySpawnTimer = enemySpawnTimerMax;
+    maxEnemies = 3;
+    mouseHeld = false;
 }
 
 void Game::initWindow()
 {
-	this->videoMode.size = {800,600};
-	this->window = new sf::RenderWindow(this->videoMode, "Impact Bastion", sf::Style::Titlebar | sf::Style::Close);
-    this->window->setFramerateLimit(60);
+	videoMode.size = {800,600};
+	window = new sf::RenderWindow(videoMode, "Impact Bastion", sf::Style::Titlebar | sf::Style::Close);
+    window->setFramerateLimit(60);
 }
 
 void Game::initEnemies()
 {
-    this->enemy.setPosition(sf::Vector2f(10.f,10.f));
-    this->enemy.setSize(sf::Vector2f(100.f, 100.f));
-    this->enemy.setScale(sf::Vector2f(0.33f, 0.33f));
-    this->enemy.setFillColor(sf::Color::Yellow);
-    //this->enemy.setOutlineColor(sf::Color::Cyan);
-    //this->enemy.setOutlineThickness(3.f);
+    enemy.setPosition(sf::Vector2f(10.f,10.f));
+    enemy.setSize(sf::Vector2f(100.f, 100.f));
+    enemy.setScale(sf::Vector2f(0.33f, 0.33f));
+    enemy.setFillColor(sf::Color::Yellow);
+    //enemy.setOutlineColor(sf::Color::Cyan);
+    //enemy.setOutlineThickness(3.f);
 }
 
 //Constructors / Destructors
-Game::Game():uiText(this->font) {
-    this->initFonts();
-    this->initText();
-	this->initVariables();
-	this->initWindow();
-    this->initEnemies();
+Game::Game():uiText(font) {
+    initFonts();
+    initText();
+	initVariables();
+	initWindow();
+    initEnemies();
     
 }
 Game::~Game() {
-	delete this->window;
+	delete window;
 }
 
 
 //Accessors
 const bool Game::running() const
 {
-	return this->window->isOpen();
+	return window->isOpen();
 }
 
 
@@ -69,8 +69,8 @@ void Game::spawnEnemy()
 {
     EnemyData newEnemy;
     //Spawn enemy
-    newEnemy.shape = this->enemy;
-    newEnemy.shape.setPosition({ 5.f,static_cast<float>(rand() % static_cast<int>(this->window->getSize().y - this->enemy.getSize().y)) });
+    newEnemy.shape = enemy;
+    newEnemy.shape.setPosition({ 5.f,static_cast<float>(rand() % static_cast<int>(window->getSize().y - enemy.getSize().y)) });
     newEnemy.shape.setFillColor(sf::Color::Green);
 
     //HP points of enemy
@@ -78,20 +78,20 @@ void Game::spawnEnemy()
 
     newEnemy.velocity = sf::Vector2f(2.f, 2.f);
     
-    this->enemies.push_back(newEnemy);
+    enemies.push_back(newEnemy);
 
 }
 
 
 void Game::pollEvents()
 {
-    while (const auto event = this->window->pollEvent())
+    while (const auto event = window->pollEvent())
     {
 
         //Close window through bar
         if (event->is<sf::Event::Closed>())
         {
-            this->window->close();
+            window->close();
         }
         //Check if the event is a key press
         if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
@@ -99,7 +99,7 @@ void Game::pollEvents()
             //Close window through pressing Esc
             if (keyPressed->code == sf::Keyboard::Key::Escape)
             {
-                this->window->close();
+                window->close();
             }
         }
     }
@@ -108,74 +108,74 @@ void Game::pollEvents()
 void Game::updateMousePositions()
 {
     //Mouse position relative to window
-    this->mousePosWindow = sf::Mouse::getPosition(*this->window);
-    this->mousePosView = this->window->mapPixelToCoords(this->mousePosWindow);
+    mousePosWindow = sf::Mouse::getPosition(*window);
+    mousePosView = window->mapPixelToCoords(mousePosWindow);
 
 }
 
 void Game::updateEnemies()
 {
     //Updating the timer for enemy spawing
-    if (this->enemies.size() < this->maxEnemies) {
-        if (this->enemySpawnTimer >= this->enemySpawnTimerMax) {
+    if (enemies.size() < maxEnemies) {
+        if (enemySpawnTimer >= enemySpawnTimerMax) {
 
             //Spawn enemy and reset timer
-            this->spawnEnemy();
-            this->enemySpawnTimer = 0.f;
+            spawnEnemy();
+            enemySpawnTimer = 0.f;
         }
         else {
-            this->enemySpawnTimer += 1.f;
+            enemySpawnTimer += 1.f;
         }
     }
 
     //Moving and updating enemies
 
-    for (int i = 0; i< this->enemies.size();) {
+    for (int i = 0; i< enemies.size();) {
         bool hitWall = false;
-        this->enemies[i].shape.move(this->enemies[i].velocity);
+        enemies[i].shape.move(enemies[i].velocity);
         
-        sf::Vector2f pos = this->enemies[i].shape.getPosition();
+        sf::Vector2f pos = enemies[i].shape.getPosition();
         sf::Vector2f size = {
-            this->enemies[i].shape.getSize().x * this->enemies[i].shape.getScale().x,
-            this->enemies[i].shape.getSize().y * this->enemies[i].shape.getScale().y,
+            enemies[i].shape.getSize().x * enemies[i].shape.getScale().x,
+            enemies[i].shape.getSize().y * enemies[i].shape.getScale().y,
 
         };
 
         //Bouncing from top and bottom
         if (pos.y <= 0.f) { //top
-            this->enemies[i].velocity.y *= -1.05f; 
-            this->enemies[i].shape.setPosition({ pos.x, 0.f });
-            this->enemies[i].shape.setOrigin({size.x * 0.5f, size.y});
-            this->enemies[i].shape.setScale({ 0.45f, 0.25f }); // Squash effect
+            enemies[i].velocity.y *= -1.05f; 
+            enemies[i].shape.setPosition({ pos.x, 0.f });
+            enemies[i].shape.setOrigin({size.x * 0.5f, size.y});
+            enemies[i].shape.setScale({ 0.45f, 0.25f }); // Squash effect
             hitWall = true;
         }
-        else if (pos.y + size.y >= this->window->getSize().y) { //bottom
-            this->enemies[i].velocity.y *= -1.05f;
-            this->enemies[i].shape.setPosition({ pos.x, this->window->getSize().y - size.y });
-            this->enemies[i].shape.setOrigin({size.x * 0.5f, 0.0f});
-            this->enemies[i].shape.setScale({ 0.45f, 0.25f });
+        else if (pos.y + size.y >= window->getSize().y) { //bottom
+            enemies[i].velocity.y *= -1.05f;
+            enemies[i].shape.setPosition({ pos.x, window->getSize().y - size.y });
+            enemies[i].shape.setOrigin({size.x * 0.5f, 0.0f});
+            enemies[i].shape.setScale({ 0.45f, 0.25f });
             hitWall = true;
         }
 
         //Sides
         if (pos.x <= 0.f) { // Left
-            this->enemies[i].velocity.x *= -1.05f;
-            this->enemies[i].shape.setPosition({ 0.f, pos.y });
-            this->enemies[i].shape.setOrigin({0.0f, size.y * 0.5f});
-            this->enemies[i].shape.setScale({ 0.25f, 0.45f });
+            enemies[i].velocity.x *= -1.05f;
+            enemies[i].shape.setPosition({ 0.f, pos.y });
+            enemies[i].shape.setOrigin({0.0f, size.y * 0.5f});
+            enemies[i].shape.setScale({ 0.25f, 0.45f });
             hitWall = true;
         }
-        else if (pos.x + size.x >= this->window->getSize().x) { // Right
-            this->enemies[i].velocity.x *= -1.05f;
-            this->enemies[i].shape.setPosition({ this->window->getSize().x - size.x, pos.y });
-            this->enemies[i].shape.setOrigin({size.x, size.y * 0.5f});
-            this->enemies[i].shape.setScale({ 0.25f, 0.45f });
+        else if (pos.x + size.x >= window->getSize().x) { // Right
+            enemies[i].velocity.x *= -1.05f;
+            enemies[i].shape.setPosition({ window->getSize().x - size.x, pos.y });
+            enemies[i].shape.setOrigin({size.x, size.y * 0.5f});
+            enemies[i].shape.setScale({ 0.25f, 0.45f });
             hitWall = true;
         }
 
 
         //Squash & Stretch
-        sf::Vector2f currentScale = this->enemies[i].shape.getScale();
+        sf::Vector2f currentScale = enemies[i].shape.getScale();
         float targetScale = 0.33f; // from initEnemies
         float recoverySpeed = 0.01f;
 
@@ -183,21 +183,21 @@ void Game::updateEnemies()
         if (currentScale.x > targetScale) currentScale.x -= recoverySpeed;
         if (currentScale.y < targetScale) currentScale.y += recoverySpeed;
         if (currentScale.y > targetScale) currentScale.y -= recoverySpeed;
-        this->enemies[i].shape.setScale(currentScale);
+        enemies[i].shape.setScale(currentScale);
 
 
         if (hitWall) {
-            this->enemies[i].hp -= 1;
+            enemies[i].hp -= 1;
 
-            if (this->enemies[i].hp == 2) {
-                this->enemies[i].shape.setFillColor(sf::Color::Yellow);
+            if (enemies[i].hp == 2) {
+                enemies[i].shape.setFillColor(sf::Color::Yellow);
             }
-            if (this->enemies[i].hp == 1) {
-                this->enemies[i].shape.setFillColor(sf::Color::Red);
+            if (enemies[i].hp == 1) {
+                enemies[i].shape.setFillColor(sf::Color::Red);
             }
         }
-        if (this->enemies[i].hp <= 0) {
-            this->enemies.erase(this ->enemies.begin() + i);
+        if (enemies[i].hp <= 0) {
+            enemies.erase(this ->enemies.begin() + i);
         }
         else {
             i++;
@@ -208,28 +208,28 @@ void Game::updateEnemies()
 
     //Check if clicked upon
     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-        if (this->mouseHeld == false) {
-            this->mouseHeld = true;
+        if (mouseHeld == false) {
+            mouseHeld = true;
             
-            for (int i = 0; i < this->enemies.size(); i ++) {
-                if (this->enemies[i].shape.getGlobalBounds().contains(this->mousePosView)) {
+            for (int i = 0; i < enemies.size(); i ++) {
+                if (enemies[i].shape.getGlobalBounds().contains(mousePosView)) {
 
-                    this->enemies[i].hp -= 1;
+                    enemies[i].hp -= 1;
 
 
-                    if (this->enemies[i].hp == 2) {
-                        this->enemies[i].shape.setFillColor(sf::Color::Yellow);
+                    if (enemies[i].hp == 2) {
+                        enemies[i].shape.setFillColor(sf::Color::Yellow);
                     }
-                    else if (this->enemies[i].hp == 1) {
-                        this->enemies[i].shape.setFillColor(sf::Color::Red);
+                    else if (enemies[i].hp == 1) {
+                        enemies[i].shape.setFillColor(sf::Color::Red);
                     }
 
 
-                    if (this->enemies[i].hp <= 0) {
-                        this->enemies.erase(this->enemies.begin() + i);
+                    if (enemies[i].hp <= 0) {
+                        enemies.erase(enemies.begin() + i);
 
                         // Gain points after destroy
-                        this->points += 10;
+                        points += 10;
                     }
 
 
@@ -238,7 +238,7 @@ void Game::updateEnemies()
             }
         }
     }else {
-        this->mouseHeld = false;
+        mouseHeld = false;
     }
     
 
@@ -248,36 +248,36 @@ void Game::updateEnemies()
 
 void Game::update()
 {
-    this->pollEvents();
-    this->updateMousePositions();
-    this->updateEnemies();
+    pollEvents();
+    updateMousePositions();
+    updateEnemies();
 
     //Update points
     std::stringstream ss;
-    ss << "Points: " << this->points;
-    this->uiText.setString(ss.str());
+    ss << "Points: " << points;
+    uiText.setString(ss.str());
   
 }
 
 void Game::renderEnemies()
 {
     //Rendering all the enemies
-    for (auto& e : this->enemies) {
-        this->window->draw(e.shape);
+    for (auto& e : enemies) {
+        window->draw(e.shape);
     }
 
 }
 
 void Game::render()
 {
-    this->window->clear();
+    window->clear();
 
 
     //Draw game objects
-    this->renderEnemies();
+    renderEnemies();
 
-    this->window->draw(this->uiText);
+    window->draw(uiText);
 
 
-    this->window->display();
+    window->display();
 }
