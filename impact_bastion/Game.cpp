@@ -2,6 +2,8 @@
 
 #include <filesystem>
 
+#define SIGN(x) ((x > 0) - (x < 0))
+
 //Private functions
 void Game::initFonts() {
     if (!font.openFromFile(std::filesystem::path("./Roboto-Bold.ttf"))) {
@@ -141,34 +143,41 @@ void Game::updateEnemies()
 
         };
 
+        sf::Vector2f offset = {
+
+            enemies[i].shape.getOrigin().x * enemies[i].shape.getScale().x,
+            enemies[i].shape.getOrigin().y * enemies[i].shape.getScale().y
+
+        };
+
         //Bouncing from top and bottom
-        if (pos.y <= 0.f) { //top
+        if ((pos.y - offset.y) <= 0.f) { //top
             enemies[i].velocity.y *= -1.05f; 
-            enemies[i].shape.setPosition({ pos.x, 0.f });
-            enemies[i].shape.setOrigin({size.x * 0.5f, size.y});
+            enemies[i].shape.setOrigin({enemies[i].shape.getSize().x * 0.5f, 0.0f});
+            enemies[i].shape.setPosition({ pos.x + (size.x * 0.5f * SIGN(enemies[i].velocity.x)), 0.0f });
             enemies[i].shape.setScale({ 0.45f, 0.25f }); // Squash effect
             hitWall = true;
         }
-        else if (pos.y + size.y >= window->getSize().y) { //bottom
+        else if ((pos.y - offset.y + size.y) >= window->getSize().y) { //bottom
             enemies[i].velocity.y *= -1.05f;
-            enemies[i].shape.setPosition({ pos.x, window->getSize().y - size.y });
-            enemies[i].shape.setOrigin({size.x * 0.5f, 0.0f});
+            enemies[i].shape.setOrigin({enemies[i].shape.getSize().x * 0.5f, enemies[i].shape.getSize().y});
+            enemies[i].shape.setPosition({ pos.x + (size.x * 0.5f * SIGN(enemies[i].velocity.x)), window->getSize().y});
             enemies[i].shape.setScale({ 0.45f, 0.25f });
             hitWall = true;
         }
 
         //Sides
-        if (pos.x <= 0.f) { // Left
+        if ((pos.x - offset.x) <= 0.f) { // Left
             enemies[i].velocity.x *= -1.05f;
-            enemies[i].shape.setPosition({ 0.f, pos.y });
-            enemies[i].shape.setOrigin({0.0f, size.y * 0.5f});
+            enemies[i].shape.setOrigin({0.0f, enemies[i].shape.getSize().y * 0.5f});
+            enemies[i].shape.setPosition({ 0.f, pos.y + (size.y * 0.5f * SIGN(enemies[i].velocity.y))});
             enemies[i].shape.setScale({ 0.25f, 0.45f });
             hitWall = true;
         }
-        else if (pos.x + size.x >= window->getSize().x) { // Right
+        else if ((pos.x - offset.x + size.x) >= window->getSize().x) { // Right
             enemies[i].velocity.x *= -1.05f;
-            enemies[i].shape.setPosition({ window->getSize().x - size.x, pos.y });
-            enemies[i].shape.setOrigin({size.x, size.y * 0.5f});
+            enemies[i].shape.setOrigin({enemies[i].shape.getSize().x, enemies[i].shape.getSize().y * 0.5f});
+            enemies[i].shape.setPosition({ window->getSize().x, pos.y + (size.y * 0.5f * SIGN(enemies[i].velocity.y))});
             enemies[i].shape.setScale({ 0.25f, 0.45f });
             hitWall = true;
         }
@@ -197,7 +206,7 @@ void Game::updateEnemies()
             }
         }
         if (enemies[i].hp <= 0) {
-            enemies.erase(this ->enemies.begin() + i);
+            enemies.erase(enemies.begin() + i);
         }
         else {
             i++;
@@ -261,11 +270,27 @@ void Game::update()
 
 void Game::renderEnemies()
 {
+    bool debug = false;
     //Rendering all the enemies
     for (auto& e : enemies) {
         window->draw(e.shape);
-    }
 
+        if(debug){
+            sf::RectangleShape boundingbox;
+            boundingbox.setSize(e.shape.getSize());
+            boundingbox.setScale(e.shape.getScale());
+            boundingbox.setPosition(e.shape.getPosition() - sf::Vector2f{e.shape.getOrigin().x * e.shape.getScale().x, e.shape.getOrigin().y * e.shape.getScale().y});
+            boundingbox.setFillColor({0, 0, 0, 0});
+            boundingbox.setOutlineColor({0, 0, 255});
+            boundingbox.setOutlineThickness(2.f);
+            window->draw(boundingbox);
+
+            sf::RectangleShape originmarker({2.f, 2.f});
+            originmarker.setFillColor({255, 0, 255});
+            originmarker.setPosition(e.shape.getTransform().transformPoint(e.shape.getOrigin()));
+            window->draw(originmarker);
+        }
+    }
 }
 
 void Game::render()
