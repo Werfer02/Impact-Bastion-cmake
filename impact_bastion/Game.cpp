@@ -21,6 +21,7 @@ void Game::initVariables()
     this->enemySpawnTimer = this->enemySpawnTimerMax;
     this->maxEnemies = 3;
     this->mouseHeld = false;
+    this->endGame = false;
 }
 
 void Game::initWindow()
@@ -40,6 +41,43 @@ void Game::initEnemies()
     //this->enemy.setOutlineThickness(3.f);
 }
 
+void Game::initPlayer() {
+    this->player.setRadius(15.f);
+    this->player.setFillColor(sf::Color::Blue);
+   
+    this->player.setPosition({ 400.f - 15.f, 570.f });
+}
+
+void Game::initBlocks() {
+    float startX = 310.f;
+    float groundY = 600.f;
+
+    for (int i = 0; i < 4; i++) {         // 4 columns
+        for (int j = 0; j < 4; j++) {     // 4 layers
+            if (j == 0 && (i == 1 || i == 2)) continue; // Space for player
+
+            BlockData block;
+            block.hp = (std::rand() % 3) + 1; // Random hp (1,2 or 3)
+            block.shape.setSize({ 50.f, 25.f });
+
+            // Colours to hp
+            if (block.hp == 3) {
+                block.shape.setFillColor(sf::Color(70, 70, 70));
+            }
+            else if (block.hp == 2) {
+                block.shape.setFillColor(sf::Color(160, 82, 45));
+            }
+            else {
+                block.shape.setFillColor(sf::Color(240, 230, 140));
+            }
+
+            block.shape.setPosition({ startX + (i * 52.f), groundY - ((j + 1) * 27.f) });
+            this->blocks.push_back(block);
+        }
+    }
+}
+
+
 //Constructors / Destructors
 Game::Game():uiText(this->font) {
     this->initFonts();
@@ -47,7 +85,8 @@ Game::Game():uiText(this->font) {
 	this->initVariables();
 	this->initWindow();
     this->initEnemies();
-    
+    this->initPlayer();
+    this->initBlocks();
 }
 Game::~Game() {
 	delete this->window;
@@ -138,6 +177,40 @@ void Game::updateEnemies()
             this->enemies[i].shape.getSize().y * this->enemies[i].shape.getScale().y,
 
         };
+        //Collison with blocks
+        for (size_t b = 0; b < this->blocks.size(); b++) {
+            if (this->enemies[i].shape.getGlobalBounds().findIntersection(this->blocks[b].shape.getGlobalBounds())) {
+
+                this->enemies[i].velocity.y *= -1.05f;
+
+                this->blocks[b].hp -= 1;
+                if (this->blocks[b].hp <= 0) {
+                    this->blocks.erase(this->blocks.begin() + b);
+                }
+                this->enemies[i].hp -= 1;
+
+                //Changing colours after hp lose
+                if (this->enemies[i].hp == 2)
+                {
+                    this->enemies[i].shape.setFillColor(sf::Color::Yellow);
+                }
+                else if (this->enemies[i].hp == 1)
+                {
+                    this->enemies[i].shape.setFillColor(sf::Color::Red);
+                }
+
+                break;
+            }
+        }
+
+        //Collision with player
+        if (this->enemies[i].shape.getGlobalBounds().findIntersection(this->player.getGlobalBounds())) {
+            this->endGame = true;
+            this->window->close();
+        }
+
+
+
 
         //Bouncing from top and bottom
         if (pos.y <= 0.f) { //top
@@ -269,6 +342,12 @@ void Game::render()
 
     //Draw game objects
     this->renderEnemies();
+
+    for (auto& b : this->blocks) {
+        this->window->draw(b.shape);
+    }
+
+    this->window->draw(this->player);
 
     this->window->draw(this->uiText);
 

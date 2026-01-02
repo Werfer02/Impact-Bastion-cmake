@@ -46,6 +46,16 @@ private:
 	std::vector<EnemyData> enemies;
 	sf::RectangleShape enemy;
 	
+	struct BlockData {
+		sf::RectangleShape shape;
+		int hp;
+	};
+
+	std::vector<BlockData> blocks;
+	sf::CircleShape player; 
+	bool endGame;
+
+	
 
 
 
@@ -55,6 +65,9 @@ private:
 	void initFonts();
 	void initText();
 	void initEnemies();
+	void initBlocks();
+	void initPlayer();
+	
 	
 public:
 	//Constructors /Destructors
