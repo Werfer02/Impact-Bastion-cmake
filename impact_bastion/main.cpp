@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "Hitbox.h"
 
 int main()
 {
