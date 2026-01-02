@@ -31,6 +31,19 @@ void Game::initWindow()
     this->window->setFramerateLimit(60);
 }
 
+void Game::initAudio() {
+    
+    if (!this->backgroundMusic.openFromFile("music1.mp3")) {
+        std::cout << "ERROR: Can't load file music1.mp3" << std::endl;
+    }
+
+    
+    this->backgroundMusic.setLooping(true); // Loop
+    this->backgroundMusic.setVolume(5.f);  // Volume
+    this->backgroundMusic.play();           
+}
+
+
 void Game::initEnemies()
 {
     this->enemy.setPosition(sf::Vector2f(10.f,10.f));
@@ -87,6 +100,7 @@ Game::Game():uiText(this->font) {
     this->initEnemies();
     this->initPlayer();
     this->initBlocks();
+    this->initAudio();
 }
 Game::~Game() {
 	delete this->window;

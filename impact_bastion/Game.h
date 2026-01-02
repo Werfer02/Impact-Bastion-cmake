@@ -37,6 +37,10 @@ private:
 	sf::Font font;
 	sf::Text uiText;
 
+	//Music / Sounds
+	sf::Music backgroundMusic;
+
+
 	//Game objects
 	struct EnemyData {
 		sf::RectangleShape shape;
@@ -67,8 +71,9 @@ private:
 	void initEnemies();
 	void initBlocks();
 	void initPlayer();
+	void initAudio();
 	
-	
+
 public:
 	//Constructors /Destructors
 	Game();
