@@ -22,6 +22,8 @@ void Game::initVariables()
     this->maxEnemies = 3;
     this->mouseHeld = false;
     this->endGame = false;
+    this->gravityStrength = 1;
+    this->screen = "menu"; //will also have "game" and "endscreen"
 }
 
 void Game::initWindow()
@@ -183,6 +185,7 @@ void Game::updateEnemies()
 
     for (int i = 0; i< this->enemies.size();) {
         bool hitWall = false;
+        this->enemies[i].velocity.y += this->gravityStrength/5;        
         this->enemies[i].shape.move(this->enemies[i].velocity);
         
         sf::Vector2f pos = this->enemies[i].shape.getPosition();

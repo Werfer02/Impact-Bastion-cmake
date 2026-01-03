@@ -4,6 +4,7 @@
 #include <vector>
 #include <ctime>
 #include <sstream>
+#include <string> 
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
@@ -32,7 +33,8 @@ private:
 	float enemySpawnTimerMax;
 	int maxEnemies;
 	bool mouseHeld;
-	
+        float gravityStrength;
+	std::string screen;
 	//Text
 	sf::Font font;
 	sf::Text uiText;
