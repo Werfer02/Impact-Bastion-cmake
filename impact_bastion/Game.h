@@ -11,6 +11,12 @@
 #include <SFML/Audio.hpp>
 #include <SFML/Network.hpp>
 
+#define SCREEN_MENU 1
+#define SCREEN_GAME 2
+#define SCREEN_END 3
+#define SCREEN_SETTINGS 4
+
+
 //Class that acts as the game engine
 
 
@@ -32,15 +38,27 @@ private:
 	float enemySpawnTimerMax;
 	int maxEnemies;
 	bool mouseHeld;
-        float gravityStrength;
+    float gravityStrength;
 	int screen;
+	int settingEnemyHP;
+	enum class ActiveSetting { NONE, ENEMIES, HP, VOLUME };
+	ActiveSetting activeSetting = ActiveSetting::NONE;
+	std::string inputBuffer;
+	 
 	//Text
 	sf::Font font;
 	sf::Text uiText;
+	sf::Text menuTextStart;
+	sf::Text menuTextSettings;
+	sf::Text menuTextExit;
+	sf::Text menuTextEnemies;
+	sf::Text menuTextHP;
+	sf::Text menuTextVolume;
+	sf::Text menuTextBack;
 
 	//Music / Sounds
 	sf::Music backgroundMusic;
-
+	float settingVolume;
 
 	//Game objects
 	struct EnemyData {
@@ -74,6 +92,9 @@ private:
 	void initBlocks();
 	void initPlayer();
 	void initAudio();
+	void initMenu();
+	void updateMenu();
+	void updateSettings();
 
 public:
 	//Constructors /Destructors

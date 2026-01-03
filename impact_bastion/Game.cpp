@@ -1,7 +1,4 @@
 #include "Game.h"
-#define SCREEN_MENU 1
-#define SCREEN_GAME 2
-#define SCREEN_END 3
 
 //Private functions
 void Game::initFonts() {
@@ -25,8 +22,10 @@ void Game::initVariables()
     this->maxEnemies = 3;
     this->mouseHeld = false;
     this->endGame = false;
-    this->gravityStrength = 1;
-    this->screen = SCREEN_GAME; //will also have ""
+    this->gravityStrength = 1.f;
+    this->screen = SCREEN_MENU; //Game starts in menu
+    this->settingEnemyHP = 3;//Default HP of enemy
+    this->settingVolume = 10.f;
 }
 
 void Game::initWindow()
@@ -34,6 +33,40 @@ void Game::initWindow()
 	this->videoMode.size = {800,600};
 	this->window = new sf::RenderWindow(this->videoMode, "Impact Bastion", sf::Style::Titlebar | sf::Style::Close);
     this->window->setFramerateLimit(60);
+}
+
+void Game::initMenu() {
+    //Menu
+    this->menuTextStart.setFont(this->font);
+    this->menuTextStart.setString("START GAME");
+    this->menuTextStart.setCharacterSize(40);
+    this->menuTextStart.setPosition({ 300.f, 150.f });
+
+    this->menuTextSettings.setFont(this->font);
+    this->menuTextSettings.setString("SETTINGS");
+    this->menuTextSettings.setCharacterSize(40);
+    this->menuTextSettings.setPosition({ 300.f, 250.f });
+
+    this->menuTextExit.setFont(this->font);
+    this->menuTextExit.setString("EXIT");
+    this->menuTextExit.setCharacterSize(40);
+    this->menuTextExit.setPosition({ 300.f, 350.f });
+
+    //Settings
+    this->menuTextEnemies.setFont(this->font);
+    this->menuTextEnemies.setPosition({ 250.f, 150.f });
+
+    this->menuTextHP.setFont(this->font);
+    this->menuTextHP.setPosition({ 250.f, 220.f });
+
+    this->menuTextVolume.setFont(this->font);
+    this->menuTextVolume.setPosition({ 250.f, 290.f });
+
+    this->menuTextBack.setFont(this->font);
+    this->menuTextBack.setString("BACK TO MENU");
+    this->menuTextBack.setFillColor(sf::Color::Yellow);
+    this->menuTextBack.setPosition({ 250.f, 400.f });
+
 }
 
 void Game::initAudio() {
@@ -97,7 +130,15 @@ void Game::initBlocks() {
 
 
 //Constructors / Destructors
-Game::Game():uiText(this->font) {
+Game::Game()
+    :uiText(this->font),
+    menuTextStart(this->font),
+    menuTextSettings(this->font),
+    menuTextExit(this->font),
+    menuTextEnemies(this->font),
+    menuTextHP(this->font),
+    menuTextVolume(this->font),
+    menuTextBack(this->font) {
     this->initFonts();
     this->initText();
 	this->initVariables();
@@ -106,6 +147,7 @@ Game::Game():uiText(this->font) {
     this->initPlayer();
     this->initBlocks();
     this->initAudio();
+    this->initMenu();
 }
 Game::~Game() {
 	delete this->window;
@@ -157,7 +199,7 @@ void Game::spawnEnemy()
     newEnemy.shape.setFillColor(sf::Color::Green);
 
     //HP points of enemy
-    newEnemy.hp = 3;
+    newEnemy.hp = this->settingEnemyHP;
     newEnemy.bounced = 0;
     newEnemy.velocity = sf::Vector2f(2.f, 2.f);
     
@@ -176,6 +218,26 @@ void Game::pollEvents()
         {
             this->window->close();
         }
+        //Text input
+        if (const auto* textEntered = event->getIf<sf::Event::TextEntered>()) {
+            if (this->activeSetting != ActiveSetting::NONE) {
+                uint32_t unicode = textEntered->unicode;
+
+                if (unicode == 8) { // Backspace 
+                    if (!this->inputBuffer.empty()) this->inputBuffer.pop_back();
+                }
+                else if (unicode == 13 || unicode == 10) { // Enter
+                    this->activeSetting = ActiveSetting::NONE;
+                    this->inputBuffer.clear();
+                }
+                else if (unicode >= '0' && unicode <= '9') { // Only numbers
+                    if (this->inputBuffer.size() < 3) { // Limit 
+                        this->inputBuffer += static_cast<char>(unicode);
+                    }
+                }
+            }
+        }
+
         //Check if the event is a key press
         if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
         {
@@ -195,6 +257,93 @@ void Game::updateMousePositions()
     this->mousePosView = this->window->mapPixelToCoords(this->mousePosWindow);
 
 }
+
+void Game::updateMenu() 
+{
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+        if (!this->mouseHeld) {
+            this->mouseHeld = true;
+            if (this->menuTextStart.getGlobalBounds().contains(this->mousePosView)) {
+                this->screen = SCREEN_GAME;
+            }
+            else if (this->menuTextSettings.getGlobalBounds().contains(this->mousePosView)) {
+                this->screen = SCREEN_SETTINGS;
+            }
+            else if (this->menuTextExit.getGlobalBounds().contains(this->mousePosView)) {
+                this->window->close();
+            }
+        }
+    }
+    else {
+        this->mouseHeld = false;
+    }
+}
+
+void Game::updateSettings() {
+    this->menuTextEnemies.setFillColor(sf::Color::White);
+    this->menuTextHP.setFillColor(sf::Color::White);
+    this->menuTextVolume.setFillColor(sf::Color::White);
+
+    //Update value from buffer
+    if (!this->inputBuffer.empty()) {
+        int val = std::stoi(this->inputBuffer);
+        if (this->activeSetting == ActiveSetting::ENEMIES) {
+            this->maxEnemies = val;
+        }
+        if (this->activeSetting == ActiveSetting::HP) {
+            this->settingEnemyHP = val;
+        }
+        if (this->activeSetting == ActiveSetting::VOLUME) {
+            this->settingVolume = static_cast<float>(val);
+            if (this->settingVolume > 100.f) {
+                this->settingVolume = 100.f;
+            }
+            this->backgroundMusic.setVolume(this->settingVolume);
+        }
+    }
+
+    //Highlighting the active field
+    if (this->activeSetting == ActiveSetting::ENEMIES) {
+        this->menuTextEnemies.setFillColor(sf::Color::Yellow);
+    }
+    if (this->activeSetting == ActiveSetting::HP) {
+        this->menuTextHP.setFillColor(sf::Color::Yellow);
+    }
+    if (this->activeSetting == ActiveSetting::VOLUME) {
+        this->menuTextVolume.setFillColor(sf::Color::Yellow);
+    }
+
+
+    this->menuTextEnemies.setString("MAX ENEMIES: " + std::to_string(this->maxEnemies));
+    this->menuTextHP.setString("ENEMY HP: " + std::to_string(this->settingEnemyHP));
+    this->menuTextVolume.setString("VOLUME: " + std::to_string((int)this->settingVolume));
+
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+        if (!this->mouseHeld) {
+            this->mouseHeld = true;
+            this->inputBuffer.clear();
+
+            if (this->menuTextEnemies.getGlobalBounds().contains(this->mousePosView)) {
+                this->activeSetting = ActiveSetting::ENEMIES;
+            }
+            else if (this->menuTextHP.getGlobalBounds().contains(this->mousePosView)) {
+                this->activeSetting = ActiveSetting::HP;
+            }
+            else if (this->menuTextVolume.getGlobalBounds().contains(this->mousePosView)) {
+                this->activeSetting = ActiveSetting::VOLUME;
+            }
+            else if (this->menuTextBack.getGlobalBounds().contains(this->mousePosView)) {
+                this->activeSetting = ActiveSetting::NONE;
+                this->screen = SCREEN_MENU;
+            }
+        }
+    }
+    else {
+        this->mouseHeld = false;
+    }
+}
+
+
 
 void Game::updateEnemies()
 {
@@ -366,12 +515,21 @@ void Game::update()
 {
     this->pollEvents();
     this->updateMousePositions();
-    this->updateEnemies();
+    
 
-    //Update points
-    std::stringstream ss;
-    ss << "Points: " << this->points;
-    this->uiText.setString(ss.str());
+
+    if (this->screen == SCREEN_MENU) {
+        this->updateMenu();
+    }
+    else if (this->screen == SCREEN_SETTINGS) {
+        this->updateSettings();
+    }
+    else if (this->screen == SCREEN_GAME) {
+        this->updateEnemies();
+        std::stringstream ss;
+        ss << "Points: " << this->points;
+        this->uiText.setString(ss.str());
+    }
   
 }
 
@@ -402,11 +560,19 @@ void Game::render()
             this->window->draw(this->uiText);
         break;    
         case SCREEN_MENU:
-
+            this->window->draw(this->menuTextStart);
+            this->window->draw(this->menuTextSettings);
+            this->window->draw(this->menuTextExit);
         break;
         case SCREEN_END:
         
         break;
+        case SCREEN_SETTINGS:
+            this->window->draw(this->menuTextEnemies);
+            this->window->draw(this->menuTextHP);
+            this->window->draw(this->menuTextVolume);
+            this->window->draw(this->menuTextBack);
+            break;
         default: this->screen = SCREEN_GAME;
     }
 
