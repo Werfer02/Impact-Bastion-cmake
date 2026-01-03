@@ -1,4 +1,7 @@
 #include "Game.h"
+#define SCREEN_MENU 1
+#define SCREEN_GAME 2
+#define SCREEN_END 3
 
 //Private functions
 void Game::initFonts() {
@@ -23,7 +26,7 @@ void Game::initVariables()
     this->mouseHeld = false;
     this->endGame = false;
     this->gravityStrength = 1;
-    this->screen = "menu"; //will also have "game" and "endscreen"
+    this->screen = SCREEN_GAME; //will also have ""
 }
 
 void Game::initWindow()
@@ -68,7 +71,7 @@ void Game::initBlocks() {
     float groundY = 600.f;
 
     for (int i = 0; i < 4; i++) {         // 4 columns
-        for (int j = 0; j < 4; j++) {     // 4 layers
+        for (int j = 0; j < 10; j++) {     // 4 layers
             if (j == 0 && (i == 1 || i == 2)) continue; // Space for player
 
             BlockData block;
@@ -118,6 +121,33 @@ const bool Game::running() const
 
 
 //Functions
+
+void Game::bounceEnemy(EnemyData& enemy, BlockData& block) {
+    enemy.bounced = 1;
+
+    auto intersection = enemy.shape.getGlobalBounds().findIntersection(block.shape.getGlobalBounds());
+
+    if (intersection) {
+        sf::FloatRect overlap = *intersection;
+
+        if (overlap.size.x > overlap.size.y) { 
+            enemy.velocity.y *= -1.f; //bounce off a floor/ceiling
+            if (enemy.shape.getPosition().y < block.shape.getPosition().y) {
+                enemy.shape.setPosition({enemy.shape.getPosition().x, block.shape.getGlobalBounds().position.y - enemy.shape.getGlobalBounds().size.y});
+            } else {
+                enemy.shape.setPosition({enemy.shape.getPosition().x, block.shape.getGlobalBounds().position.y + block.shape.getGlobalBounds().size.y});
+            }
+        } else {
+            enemy.velocity.x *= -1.f; //bounce off a side
+            if (enemy.shape.getPosition().x < block.shape.getPosition().x) {
+                enemy.shape.setPosition({block.shape.getGlobalBounds().position.x - enemy.shape.getGlobalBounds().size.x, enemy.shape.getPosition().y});
+            } else {
+                enemy.shape.setPosition({block.shape.getGlobalBounds().position.x + block.shape.getGlobalBounds().size.x, enemy.shape.getPosition().y});
+            }
+        }
+    }
+}
+
 void Game::spawnEnemy()
 {
     EnemyData newEnemy;
@@ -128,7 +158,7 @@ void Game::spawnEnemy()
 
     //HP points of enemy
     newEnemy.hp = 3;
-
+    newEnemy.bounced = 0;
     newEnemy.velocity = sf::Vector2f(2.f, 2.f);
     
     this->enemies.push_back(newEnemy);
@@ -197,9 +227,11 @@ void Game::updateEnemies()
         //Collison with blocks
         for (size_t b = 0; b < this->blocks.size(); b++) {
             if (this->enemies[i].shape.getGlobalBounds().findIntersection(this->blocks[b].shape.getGlobalBounds())) {
-
-                this->enemies[i].velocity.y *= -1.05f;
-
+                
+                if(!this->enemies[i].bounced) bounceEnemy(this->enemies[i],this->blocks[b]);
+                this->enemies[i].bounced = 0;
+  
+  
                 this->blocks[b].hp -= 1;
                 if (this->blocks[b].hp <= 0) {
                     this->blocks.erase(this->blocks.begin() + b);
@@ -356,18 +388,27 @@ void Game::render()
 {
     this->window->clear();
 
+    switch(this->screen){
+        case SCREEN_GAME:
+            //Draw game objects
+            this->renderEnemies();
 
-    //Draw game objects
-    this->renderEnemies();
+            for (auto& b : this->blocks) {
+                this->window->draw(b.shape);
+            }
 
-    for (auto& b : this->blocks) {
-        this->window->draw(b.shape);
+            this->window->draw(this->player);
+
+            this->window->draw(this->uiText);
+        break;    
+        case SCREEN_MENU:
+
+        break;
+        case SCREEN_END:
+        
+        break;
+        default: this->screen = SCREEN_GAME;
     }
-
-    this->window->draw(this->player);
-
-    this->window->draw(this->uiText);
-
 
     this->window->display();
 }

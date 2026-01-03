@@ -61,3 +61,5 @@
     bool Hitbox::isOverlapping(const Hitbox& other) const {
         return !(x2 <= other.x1 || x1 >= other.x2 || y2 <= other.y1 || y1 >= other.y2);
     }
+
+//po namyśle wychodzi na to że i tak sfml to obsługuje

@@ -4,7 +4,6 @@
 #include <vector>
 #include <ctime>
 #include <sstream>
-#include <string> 
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
@@ -34,7 +33,7 @@ private:
 	int maxEnemies;
 	bool mouseHeld;
         float gravityStrength;
-	std::string screen;
+	int screen;
 	//Text
 	sf::Font font;
 	sf::Text uiText;
@@ -48,6 +47,7 @@ private:
 		sf::RectangleShape shape;
 		int hp;
 		sf::Vector2f velocity;
+		bool bounced;
 	};
 	std::vector<EnemyData> enemies;
 	sf::RectangleShape enemy;
@@ -74,7 +74,6 @@ private:
 	void initBlocks();
 	void initPlayer();
 	void initAudio();
-	
 
 public:
 	//Constructors /Destructors
@@ -87,6 +86,7 @@ public:
 
 
 	//Functions
+	void bounceEnemy(EnemyData& enemy, BlockData& block);
 	void spawnEnemy();
 	void pollEvents();
 	void updateMousePositions();
