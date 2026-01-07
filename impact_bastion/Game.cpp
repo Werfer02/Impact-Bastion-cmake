@@ -22,7 +22,7 @@ void Game::initVariables()
     this->maxEnemies = 3;
     this->mouseHeld = false;
     this->endGame = false;
-    this->gravityStrength = 1.f;
+    this->gravityStrength = 0.3;
     this->screen = SCREEN_MENU; //Game starts in menu
     this->settingEnemyHP = 3;//Default HP of enemy
     this->settingVolume = 10.f;

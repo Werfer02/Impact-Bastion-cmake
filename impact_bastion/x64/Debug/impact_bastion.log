@@ -1,4 +1,3 @@
 ﻿  Game.cpp
-  main.cpp
-  Generowanie kodu...
+C:\Users\sowam\Documents\GitHub\Impact-Bastion\impact_bastion\Game.cpp(25,29): warning C4305: "=": obcięcie z "double" do "float"
   impact_bastion.vcxproj -> C:\Users\sowam\Documents\GitHub\Impact-Bastion\x64\Debug\impact_bastion.exe
