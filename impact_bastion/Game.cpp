@@ -289,9 +289,15 @@ void Game::updateSettings() {
         int val = std::stoi(this->inputBuffer);
         if (this->activeSetting == ActiveSetting::ENEMIES) {
             this->maxEnemies = val;
+            if (this->maxEnemies < 1) {
+                this->maxEnemies = 1;
+            }
         }
         if (this->activeSetting == ActiveSetting::HP) {
             this->settingEnemyHP = val;
+            if (this->settingEnemyHP <1) {
+                this->settingEnemyHP = 1;
+            }
         }
         if (this->activeSetting == ActiveSetting::VOLUME) {
             this->settingVolume = static_cast<float>(val);
@@ -404,7 +410,7 @@ void Game::updateEnemies()
         //Collision with player
         if (this->enemies[i].shape.getGlobalBounds().findIntersection(this->player.getGlobalBounds())) {
             this->endGame = true;
-            this->window->close();
+            this->window->close();//TODO
         }
 
 
