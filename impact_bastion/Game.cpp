@@ -18,9 +18,10 @@ void Game::initVariables()
     //Game logic
     this->points = 0;
     this->pointMulti = 1.0f;
-    this->enemySpawnTimerMax = 30.f;
+    this->enemySpawnTimerMax = 50.f;
     this->enemySpawnTimer = this->enemySpawnTimerMax;
     this->maxEnemies = 3;
+    this->baseEnemySpeed = 2.f;
     this->mouseHeld = false;
     this->endGame = false;
     this->gravityStrength = 0.3;
@@ -31,10 +32,13 @@ void Game::initVariables()
 
 void Game::updatePointMulti() {
     // Example logic: increase point multiplier based on difficulty modifiers
-    this->pointMulti = 1.0f + (0.25f * (this->maxEnemies - 3)); // Increase multiplier with more max enemies
-    this->pointMulti += (0.25f * (this->settingEnemyHP - 3)); // Increase multiplier with higher enemy HP
-    this->pointMulti += std::min(1-(30.0f/this->enemySpawnTimer),3.0f); // Increase multiplier with faster spawn rate
+    this->pointMulti = 1.0f + (0.1f * (this->maxEnemies - 3)); // Increase multiplier with more max enemies
+    this->pointMulti *= 1.0f + (0.1f * (this->settingEnemyHP - 3)); // Increase multiplier with higher enemy HP
+    this->pointMulti *= 1.0f + (50.0f-this->enemySpawnTimerMax)/200.0f; // Increase multiplier with faster spawn rate
+    this->pointMulti *= 1.0f + (this->baseEnemySpeed-2.0f)/4.0f; // Increase multiplier with faster enemy speed
+
     if(this->pointMulti < 0.25f) this->pointMulti = 0.25f; 
+    if(this->pointMulti > 5.0f) this->pointMulti = 5.0f;
 }
 
 void Game::initWindow()
@@ -62,19 +66,28 @@ void Game::initMenu() {
     this->menuTextExit.setPosition({ 300.f, 350.f });
 
     //Settings
+    this->menuTextPointMulti.setFont(this->font);
+    this->menuTextPointMulti.setPosition({ 250.f, 80.f });
+
     this->menuTextEnemies.setFont(this->font);
     this->menuTextEnemies.setPosition({ 250.f, 150.f });
 
     this->menuTextHP.setFont(this->font);
     this->menuTextHP.setPosition({ 250.f, 220.f });
 
+    this->menuTextSpawnRate.setFont(this->font);
+    this->menuTextSpawnRate.setPosition({ 250.f, 290.f });
+
+    this->menuTextEnemySpeed.setFont(this->font);
+    this->menuTextEnemySpeed.setPosition({ 250.f, 360.f });
+    
     this->menuTextVolume.setFont(this->font);
-    this->menuTextVolume.setPosition({ 250.f, 290.f });
+    this->menuTextVolume.setPosition({ 250.f, 430.f });
 
     this->menuTextBack.setFont(this->font);
     this->menuTextBack.setString("BACK TO MENU");
     this->menuTextBack.setFillColor(sf::Color::Yellow);
-    this->menuTextBack.setPosition({ 250.f, 400.f });
+    this->menuTextBack.setPosition({ 250.f, 500.f });
 
 }
 
@@ -169,8 +182,11 @@ Game::Game()
     menuTextStart(this->font),
     menuTextSettings(this->font),
     menuTextExit(this->font),
+    menuTextPointMulti(this->font),
     menuTextEnemies(this->font),
     menuTextHP(this->font),
+    menuTextSpawnRate(this->font),
+    menuTextEnemySpeed(this->font),
     menuTextVolume(this->font),
     menuTextBack(this->font) {
     this->initFonts();
@@ -262,7 +278,7 @@ void Game::spawnEnemy()
     lastEnemy.sprite.setScale({ 3.6f, 3.6f });
     lastEnemy.hp = 3;
     lastEnemy.bounced = false;
-    lastEnemy.velocity = sf::Vector2f(2.f, 2.f);
+    lastEnemy.velocity = sf::Vector2f(this->baseEnemySpeed, this->baseEnemySpeed);
 
     float windowHeight = static_cast<float>(this->window->getSize().y);
     float enemyHeight = lastEnemy.sprite.getGlobalBounds().size.y;
@@ -344,8 +360,11 @@ void Game::updateMenu()
 }
 
 void Game::updateSettings() {
+    this->menuTextPointMulti.setFillColor(sf::Color::White);
     this->menuTextEnemies.setFillColor(sf::Color::White);
     this->menuTextHP.setFillColor(sf::Color::White);
+    this->menuTextSpawnRate.setFillColor(sf::Color::White);
+    this->menuTextEnemySpeed.setFillColor(sf::Color::White);
     this->menuTextVolume.setFillColor(sf::Color::White);
 
     //Update value from buffer
@@ -355,6 +374,28 @@ void Game::updateSettings() {
             this->maxEnemies = val;
             if (this->maxEnemies < 1) {
                 this->maxEnemies = 1;
+            }
+        }
+        if (this->activeSetting == ActiveSetting::HP) {
+            this->settingEnemyHP = val;
+            if (this->settingEnemyHP <1) {
+                this->settingEnemyHP = 1;
+            }
+        }
+        if (this->activeSetting == ActiveSetting::SPAWNRATE) {
+            this->enemySpawnTimerMax = val;
+            if (this->enemySpawnTimerMax < 1) {
+                this->enemySpawnTimerMax = 1;
+            } else if (this->enemySpawnTimerMax > 200) {
+                this->enemySpawnTimerMax = 200;
+            }
+        }
+        if (this->activeSetting == ActiveSetting::BASESPEED) {
+            this->baseEnemySpeed = val;
+            if (this->baseEnemySpeed < 1) {
+                this->baseEnemySpeed = 1;
+            } else if (this->baseEnemySpeed > 10) {
+                this->baseEnemySpeed = 10;
             }
         }
         if (this->activeSetting == ActiveSetting::HP) {
@@ -380,13 +421,21 @@ void Game::updateSettings() {
     if (this->activeSetting == ActiveSetting::HP) {
         this->menuTextHP.setFillColor(sf::Color::Yellow);
     }
+    if (this->activeSetting == ActiveSetting::SPAWNRATE) {
+        this->menuTextSpawnRate.setFillColor(sf::Color::Yellow);
+    }
+    if (this->activeSetting == ActiveSetting::BASESPEED) {
+        this->menuTextEnemySpeed.setFillColor(sf::Color::Yellow);
+    }
     if (this->activeSetting == ActiveSetting::VOLUME) {
         this->menuTextVolume.setFillColor(sf::Color::Yellow);
     }
 
-
+    this->menuTextPointMulti.setString("POINT MULTIPLIER: x" + std::to_string(this->pointMulti).substr(0,4));
     this->menuTextEnemies.setString("MAX ENEMIES: " + std::to_string(this->maxEnemies));
     this->menuTextHP.setString("ENEMY HP: " + std::to_string(this->settingEnemyHP));
+    this->menuTextSpawnRate.setString("ENEMY SPAWN CD: " + std::to_string((int)this->enemySpawnTimerMax));
+    this->menuTextEnemySpeed.setString("ENEMY SPEED: " + std::to_string((int)this->baseEnemySpeed));
     this->menuTextVolume.setString("VOLUME: " + std::to_string((int)this->settingVolume));
 
     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
@@ -399,6 +448,12 @@ void Game::updateSettings() {
             }
             else if (this->menuTextHP.getGlobalBounds().contains(this->mousePosView)) {
                 this->activeSetting = ActiveSetting::HP;
+            }
+            else if (this->menuTextSpawnRate.getGlobalBounds().contains(this->mousePosView)) {
+                this->activeSetting = ActiveSetting::SPAWNRATE;
+            }
+            else if (this->menuTextEnemySpeed.getGlobalBounds().contains(this->mousePosView)) {
+                this->activeSetting = ActiveSetting::BASESPEED;
             }
             else if (this->menuTextVolume.getGlobalBounds().contains(this->mousePosView)) {
                 this->activeSetting = ActiveSetting::VOLUME;
@@ -647,8 +702,11 @@ void Game::render()
         
         break;
         case SCREEN_SETTINGS:
+            this->window->draw(this->menuTextPointMulti);
             this->window->draw(this->menuTextEnemies);
             this->window->draw(this->menuTextHP);
+            this->window->draw(this->menuTextSpawnRate);
+            this->window->draw(this->menuTextEnemySpeed);
             this->window->draw(this->menuTextVolume);
             this->window->draw(this->menuTextBack);
             break;

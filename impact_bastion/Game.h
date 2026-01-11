@@ -15,7 +15,7 @@
 #define SCREEN_GAME 2
 #define SCREEN_END 3
 #define SCREEN_SETTINGS 4
-
+#define SCREEN_STATS 5
 
 //Class that acts as the game engine
 
@@ -38,11 +38,12 @@ private:
 	float enemySpawnTimer;
 	float enemySpawnTimerMax;
 	int maxEnemies;
+	float baseEnemySpeed;
 	bool mouseHeld;
     float gravityStrength;
 	int screen;
 	int settingEnemyHP;
-	enum class ActiveSetting { NONE, ENEMIES, HP, VOLUME };
+	enum class ActiveSetting { NONE, ENEMIES, HP, SPAWNRATE, BASESPEED, VOLUME  };
 	ActiveSetting activeSetting = ActiveSetting::NONE;
 	std::string inputBuffer;
 	 
@@ -52,8 +53,11 @@ private:
 	sf::Text menuTextStart;
 	sf::Text menuTextSettings;
 	sf::Text menuTextExit;
+	sf::Text menuTextPointMulti;
 	sf::Text menuTextEnemies;
 	sf::Text menuTextHP;
+	sf::Text menuTextSpawnRate;
+	sf::Text menuTextEnemySpeed;
 	sf::Text menuTextVolume;
 	sf::Text menuTextBack;
 
