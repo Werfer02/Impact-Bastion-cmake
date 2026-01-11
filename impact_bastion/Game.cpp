@@ -84,7 +84,7 @@ void Game::initAudio() {
 
 void Game::initEnemies()
 {
-    this->enemy.setPosition(sf::Vector2f(10.f,10.f));
+    this->enemy.setPosition(sf::Vector2f(10.f, 10.f));
     this->enemy.setSize(sf::Vector2f(100.f, 100.f));
     this->enemy.setScale(sf::Vector2f(0.33f, 0.33f));
     this->enemy.setFillColor(sf::Color::Yellow);
@@ -107,24 +107,48 @@ void Game::initBlocks() {
         for (int j = 0; j < 10; j++) {     // 4 layers
             if (j == 0 && (i == 1 || i == 2)) continue; // Space for player
 
-            BlockData block;
-            block.hp = (std::rand() % 3) + 1; // Random hp (1,2 or 3)
-            block.shape.setSize({ 50.f, 25.f });
+            int randomHP = (std::rand() % 3) + 1; // Random hp (1,2 or 3)
+            //block.sprite.setTexture(blockTextures[block.hp - 1]);
 
             // Colours to hp
-            if (block.hp == 3) {
-                block.shape.setFillColor(sf::Color(70, 70, 70));
+            int textureIndex = 0;
+            Material mat = GLASS;
+
+            if (randomHP == 3) {
+                textureIndex = 3;
+                mat = STONE;
             }
-            else if (block.hp == 2) {
-                block.shape.setFillColor(sf::Color(160, 82, 45));
+            else if (randomHP == 2) {
+                textureIndex = 1;
+                mat = WOOD;
             }
             else {
-                block.shape.setFillColor(sf::Color(240, 230, 140));
+                textureIndex = 0;
+                mat = GLASS;
             }
 
-            block.shape.setPosition({ startX + (i * 52.f), groundY - ((j + 1) * 27.f) });
-            this->blocks.push_back(block);
+            this->blocks.emplace_back(this->blockTextures[textureIndex], randomHP, mat);
+
+            this->blocks.back().sprite.setPosition({ startX + (i * 63.f), groundY - ((j + 1) * 32.f) });
         }
+    }
+}
+void Game::updateBlockTexture(BlockData& block) {
+    // stone
+    if (block.material == Material::STONE) {
+        if (block.hp == 2)
+            block.sprite.setTexture(this->blockTextures[4]);
+        else if (block.hp == 1)
+            block.sprite.setTexture(this->blockTextures[5]);
+    }
+    // wood
+    else if (block.material == Material::WOOD) {
+        if (block.hp == 1)
+            block.sprite.setTexture(this->blockTextures[2]);
+    }
+    // glass
+    else {
+        block.sprite.setTexture(blockTextures[0]);
     }
 }
 
@@ -145,6 +169,33 @@ Game::Game()
 	this->initWindow();
     this->initEnemies();
     this->initPlayer();
+
+    if (!blockTextures[0].loadFromFile("../graphics/glass_redst.png"))
+        std::cout << "ERROR: glass_redst.png\n";
+
+    if (!blockTextures[1].loadFromFile("../graphics/wood_redst.png"))
+        std::cout << "ERROR: wood_redst.png\n";
+
+    if (!blockTextures[2].loadFromFile("../graphics/wood_b_redst.png"))
+        std::cout << "ERROR: wood_b_redst.png\n";
+
+    if (!blockTextures[3].loadFromFile("../graphics/stone_redst.png"))
+        std::cout << "ERROR: stone_redst.png\n";
+
+    if (!blockTextures[4].loadFromFile("../graphics/stone_b_redst.png"))
+        std::cout << "ERROR: stone_b_redst.png\n";
+
+    if (!blockTextures[5].loadFromFile("../graphics/stone_b2_redst.png"))
+        std::cout << "ERROR: stone_b2_redst.png\n";
+
+    if (!enemyTextures[0].loadFromFile("../graphics/ball.png"))
+        std::cout << "ERROR: ball.png\n";
+
+    if (!enemyTextures[1].loadFromFile("../graphics/ball_b.png"))
+        std::cout << "ERROR: ball_b.png\n";
+
+    if (!enemyTextures[2].loadFromFile("../graphics/ball_b2.png"))
+        std::cout << "ERROR: ball_b2.png\n";
     this->initBlocks();
     this->initAudio();
     this->initMenu();
@@ -167,24 +218,24 @@ const bool Game::running() const
 void Game::bounceEnemy(EnemyData& enemy, BlockData& block) {
     enemy.bounced = 1;
 
-    auto intersection = enemy.shape.getGlobalBounds().findIntersection(block.shape.getGlobalBounds());
+    auto intersection = enemy.sprite.getGlobalBounds().findIntersection(block.sprite.getGlobalBounds());
 
     if (intersection) {
         sf::FloatRect overlap = *intersection;
 
         if (overlap.size.x > overlap.size.y) { 
             enemy.velocity.y *= -1.f; //bounce off a floor/ceiling
-            if (enemy.shape.getPosition().y < block.shape.getPosition().y) {
-                enemy.shape.setPosition({enemy.shape.getPosition().x, block.shape.getGlobalBounds().position.y - enemy.shape.getGlobalBounds().size.y});
+            if (enemy.sprite.getPosition().y < block.sprite.getPosition().y) {
+                enemy.sprite.setPosition({enemy.sprite.getPosition().x, block.sprite.getGlobalBounds().position.y - enemy.sprite.getGlobalBounds().size.y});
             } else {
-                enemy.shape.setPosition({enemy.shape.getPosition().x, block.shape.getGlobalBounds().position.y + block.shape.getGlobalBounds().size.y});
+                enemy.sprite.setPosition({enemy.sprite.getPosition().x, block.sprite.getGlobalBounds().position.y + block.sprite.getGlobalBounds().size.y});
             }
         } else {
             enemy.velocity.x *= -1.f; //bounce off a side
-            if (enemy.shape.getPosition().x < block.shape.getPosition().x) {
-                enemy.shape.setPosition({block.shape.getGlobalBounds().position.x - enemy.shape.getGlobalBounds().size.x, enemy.shape.getPosition().y});
+            if (enemy.sprite.getPosition().x < block.sprite.getPosition().x) {
+                enemy.sprite.setPosition({block.sprite.getGlobalBounds().position.x - enemy.sprite.getGlobalBounds().size.x, enemy.sprite.getPosition().y});
             } else {
-                enemy.shape.setPosition({block.shape.getGlobalBounds().position.x + block.shape.getGlobalBounds().size.x, enemy.shape.getPosition().y});
+                enemy.sprite.setPosition({block.sprite.getGlobalBounds().position.x + block.sprite.getGlobalBounds().size.x, enemy.sprite.getPosition().y});
             }
         }
     }
@@ -192,19 +243,22 @@ void Game::bounceEnemy(EnemyData& enemy, BlockData& block) {
 
 void Game::spawnEnemy()
 {
-    EnemyData newEnemy;
     //Spawn enemy
-    newEnemy.shape = this->enemy;
-    newEnemy.shape.setPosition({ 5.f,static_cast<float>(rand() % static_cast<int>(this->window->getSize().y - this->enemy.getSize().y)) });
-    newEnemy.shape.setFillColor(sf::Color::Green);
+    this->enemies.emplace_back(this->enemyTextures[0]);
 
     //HP points of enemy
-    newEnemy.hp = this->settingEnemyHP;
-    newEnemy.bounced = 0;
-    newEnemy.velocity = sf::Vector2f(2.f, 2.f);
-    
-    this->enemies.push_back(newEnemy);
 
+    auto& lastEnemy = this->enemies.back();
+    lastEnemy.sprite.setScale({ 3.6f, 3.6f });
+    lastEnemy.hp = 3;
+    lastEnemy.bounced = false;
+    lastEnemy.velocity = sf::Vector2f(2.f, 2.f);
+
+    float windowHeight = static_cast<float>(this->window->getSize().y);
+    float enemyHeight = lastEnemy.sprite.getGlobalBounds().size.y;
+    float posY = static_cast<float>(rand() % static_cast<int>(windowHeight - enemyHeight));
+
+    lastEnemy.sprite.setPosition({ 5.f, posY });
 }
 
 
@@ -368,47 +422,55 @@ void Game::updateEnemies()
 
     //Moving and updating enemies
 
-    for (int i = 0; i< this->enemies.size();) {
+    for (int i = 0; i < this->enemies.size();) {
         bool hitWall = false;
-        this->enemies[i].velocity.y += this->gravityStrength/5;        
-        this->enemies[i].shape.move(this->enemies[i].velocity);
-        
-        sf::Vector2f pos = this->enemies[i].shape.getPosition();
-        sf::Vector2f size = {
-            this->enemies[i].shape.getSize().x * this->enemies[i].shape.getScale().x,
-            this->enemies[i].shape.getSize().y * this->enemies[i].shape.getScale().y,
+        this->enemies[i].velocity.y += this->gravityStrength / 5.f;
+        this->enemies[i].sprite.move(this->enemies[i].velocity);
 
-        };
+        sf::Vector2f pos = this->enemies[i].sprite.getPosition();
+        sf::FloatRect bounds = this->enemies[i].sprite.getGlobalBounds();
+        sf::Vector2f size = { bounds.size.x, bounds.size.y };
+
         //Collison with blocks
         for (size_t b = 0; b < this->blocks.size(); b++) {
-            if (this->enemies[i].shape.getGlobalBounds().findIntersection(this->blocks[b].shape.getGlobalBounds())) {
-                
-                if(!this->enemies[i].bounced) bounceEnemy(this->enemies[i],this->blocks[b]);
-                this->enemies[i].bounced = 0;
-  
-  
+            if (this->enemies[i].sprite.getGlobalBounds().findIntersection(this->blocks[b].sprite.getGlobalBounds())) {
+
+                if (!this->enemies[i].bounced) {
+                    bounceEnemy(this->enemies[i], this->blocks[b]);
+                    this->enemies[i].bounced = true;
+                }
+
+                // Damage block
                 this->blocks[b].hp -= 1;
+                this->updateBlockTexture(this->blocks[b]);
+                
+                this->enemies[i].hp -= 1;
+
+                if (this->enemies[i].hp == 2)
+                    this->enemies[i].sprite.setTexture(this->enemyTextures[1]);
+                else if (this->enemies[i].hp == 1)
+                    this->enemies[i].sprite.setTexture(this->enemyTextures[2]);
+
+
+                // Destroy block
                 if (this->blocks[b].hp <= 0) {
                     this->blocks.erase(this->blocks.begin() + b);
                 }
+
+                // Damage enemy
                 this->enemies[i].hp -= 1;
 
-                //Changing colours after hp lose
                 if (this->enemies[i].hp == 2)
-                {
-                    this->enemies[i].shape.setFillColor(sf::Color::Yellow);
-                }
+                    this->enemies[i].sprite.setTexture(this->enemyTextures[1]);
                 else if (this->enemies[i].hp == 1)
-                {
-                    this->enemies[i].shape.setFillColor(sf::Color::Red);
-                }
+                    this->enemies[i].sprite.setTexture(this->enemyTextures[2]);
 
-                break;
+                break; 
             }
         }
 
         //Collision with player
-        if (this->enemies[i].shape.getGlobalBounds().findIntersection(this->player.getGlobalBounds())) {
+        if (this->enemies[i].sprite.getGlobalBounds().findIntersection(this->player.getGlobalBounds())) {
             this->endGame = true;
             this->window->close();//TODO
         }
@@ -418,53 +480,53 @@ void Game::updateEnemies()
 
         //Bouncing from top and bottom
         if (pos.y <= 0.f) { //top
-            this->enemies[i].velocity.y *= -1.05f; 
-            this->enemies[i].shape.setPosition({ pos.x, 0.f });
-            this->enemies[i].shape.setScale({ 0.45f, 0.25f }); // Squash effect
+            this->enemies[i].velocity.y *= -1.18f; 
+            this->enemies[i].sprite.setPosition({ pos.x, 0.f });
+            this->enemies[i].sprite.setScale({ 1.95f, 1.75f }); // Squash effect
             hitWall = true;
         }
         else if (pos.y + size.y >= this->window->getSize().y) { //bottom
-            this->enemies[i].velocity.y *= -1.05f;
-            this->enemies[i].shape.setPosition({ pos.x, this->window->getSize().y - size.y });
-            this->enemies[i].shape.setScale({ 0.45f, 0.25f });
+            this->enemies[i].velocity.y *= -1.18f;
+            this->enemies[i].sprite.setPosition({ pos.x, this->window->getSize().y - size.y });
+            this->enemies[i].sprite.setScale({ 1.95f, 1.75f });
             hitWall = true;
         }
 
         //Sides
         if (pos.x <= 0.f) { // Left
-            this->enemies[i].velocity.x *= -1.05f;
-            this->enemies[i].shape.setPosition({ 0.f, pos.y });
-            this->enemies[i].shape.setScale({ 0.25f, 0.45f });
+            this->enemies[i].velocity.x *= -1.18f;
+            this->enemies[i].sprite.setPosition({ 0.f, pos.y });
+            this->enemies[i].sprite.setScale({ 1.75f, 1.95f });
             hitWall = true;
         }
         else if (pos.x + size.x >= this->window->getSize().x) { // Right
-            this->enemies[i].velocity.x *= -1.05f;
-            this->enemies[i].shape.setPosition({ this->window->getSize().x - size.x, pos.y });
-            this->enemies[i].shape.setScale({ 0.25f, 0.45f });
+            this->enemies[i].velocity.x *= -1.18f;
+            this->enemies[i].sprite.setPosition({ this->window->getSize().x - size.x, pos.y });
+            this->enemies[i].sprite.setScale({ 1.75f, 1.95f });
             hitWall = true;
         }
 
 
         //Squash & Stretch
-        sf::Vector2f currentScale = this->enemies[i].shape.getScale();
-        float targetScale = 0.33f; // from initEnemies
-        float recoverySpeed = 0.01f;
+        sf::Vector2f currentScale = this->enemies[i].sprite.getScale();
+        float targetScale = 3.6f; // from initEnemies
+        float recoverySpeed = 0.7f;
 
         if (currentScale.x < targetScale) currentScale.x += recoverySpeed;
         if (currentScale.x > targetScale) currentScale.x -= recoverySpeed;
         if (currentScale.y < targetScale) currentScale.y += recoverySpeed;
         if (currentScale.y > targetScale) currentScale.y -= recoverySpeed;
-        this->enemies[i].shape.setScale(currentScale);
+        this->enemies[i].sprite.setScale(currentScale);
 
 
         if (hitWall) {
             this->enemies[i].hp -= 1;
 
             if (this->enemies[i].hp == 2) {
-                this->enemies[i].shape.setFillColor(sf::Color::Yellow);
+                this->enemies[i].sprite.setTexture(this->enemyTextures[1]);
             }
             if (this->enemies[i].hp == 1) {
-                this->enemies[i].shape.setFillColor(sf::Color::Red);
+                this->enemies[i].sprite.setTexture(this->enemyTextures[2]);
             }
         }
         if (this->enemies[i].hp <= 0) {
@@ -483,16 +545,16 @@ void Game::updateEnemies()
             this->mouseHeld = true;
             
             for (int i = 0; i < this->enemies.size(); i ++) {
-                if (this->enemies[i].shape.getGlobalBounds().contains(this->mousePosView)) {
+                if (this->enemies[i].sprite.getGlobalBounds().contains(this->mousePosView)) {
 
                     this->enemies[i].hp -= 1;
 
 
                     if (this->enemies[i].hp == 2) {
-                        this->enemies[i].shape.setFillColor(sf::Color::Yellow);
+                        this->enemies[i].sprite.setTexture(this->enemyTextures[1]);
                     }
                     else if (this->enemies[i].hp == 1) {
-                        this->enemies[i].shape.setFillColor(sf::Color::Red);
+                        this->enemies[i].sprite.setTexture(this->enemyTextures[2]);
                     }
 
 
@@ -543,7 +605,7 @@ void Game::renderEnemies()
 {
     //Rendering all the enemies
     for (auto& e : this->enemies) {
-        this->window->draw(e.shape);
+        this->window->draw(e.sprite);
     }
 
 }
@@ -558,7 +620,7 @@ void Game::render()
             this->renderEnemies();
 
             for (auto& b : this->blocks) {
-                this->window->draw(b.shape);
+                this->window->draw(b.sprite);
             }
 
             this->window->draw(this->player);

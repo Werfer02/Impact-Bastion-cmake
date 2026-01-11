@@ -62,18 +62,37 @@ private:
 
 	//Game objects
 	struct EnemyData {
-		sf::RectangleShape shape;
+		sf::Sprite sprite;
 		int hp;
 		sf::Vector2f velocity;
 		bool bounced;
+		EnemyData(const sf::Texture& tex)
+			: sprite(tex), hp(3), velocity(2.f, 2.f), bounced(false)
+		{
+		}
 	};
 	std::vector<EnemyData> enemies;
 	sf::RectangleShape enemy;
-	
+
+	enum Material { GLASS, WOOD, STONE };
+
 	struct BlockData {
-		sf::RectangleShape shape;
+		sf::Sprite sprite;
 		int hp;
+		Material material;
+
+		BlockData(const sf::Texture& texture, int hp, Material mat)
+			: sprite(texture), hp(hp), material(mat)
+		{
+		}
 	};
+
+	void updateBlockTexture(BlockData& block);
+
+	sf::Texture blockTextures[6];
+	sf::Texture enemyTextures[3];
+
+	void updateEnemyTexture(EnemyData& enemy);
 
 	std::vector<BlockData> blocks;
 	sf::CircleShape player; 
