@@ -483,13 +483,13 @@ void Game::updateEnemies()
             this->enemies[i].velocity.y *= -1.18f; 
             this->enemies[i].sprite.setPosition({ pos.x, 0.f });
             this->enemies[i].sprite.setScale({ 1.95f, 1.75f }); // Squash effect
-            hitWall = true;
+            
         }
         else if (pos.y + size.y >= this->window->getSize().y) { //bottom
             this->enemies[i].velocity.y *= -1.18f;
             this->enemies[i].sprite.setPosition({ pos.x, this->window->getSize().y - size.y });
             this->enemies[i].sprite.setScale({ 1.95f, 1.75f });
-            hitWall = true;
+            
         }
 
         //Sides
@@ -497,13 +497,13 @@ void Game::updateEnemies()
             this->enemies[i].velocity.x *= -1.18f;
             this->enemies[i].sprite.setPosition({ 0.f, pos.y });
             this->enemies[i].sprite.setScale({ 1.75f, 1.95f });
-            hitWall = true;
+            
         }
         else if (pos.x + size.x >= this->window->getSize().x) { // Right
             this->enemies[i].velocity.x *= -1.18f;
             this->enemies[i].sprite.setPosition({ this->window->getSize().x - size.x, pos.y });
             this->enemies[i].sprite.setScale({ 1.75f, 1.95f });
-            hitWall = true;
+            
         }
 
 
