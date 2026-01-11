@@ -17,6 +17,7 @@ void Game::initVariables()
 
     //Game logic
     this->points = 0;
+    this->pointMulti = 1.0f;
     this->enemySpawnTimerMax = 30.f;
     this->enemySpawnTimer = this->enemySpawnTimerMax;
     this->maxEnemies = 3;
@@ -26,6 +27,14 @@ void Game::initVariables()
     this->screen = SCREEN_MENU; //Game starts in menu
     this->settingEnemyHP = 3;//Default HP of enemy
     this->settingVolume = 10.f;
+}
+
+void Game::updatePointMulti() {
+    // Example logic: increase point multiplier based on difficulty modifiers
+    this->pointMulti = 1.0f + (0.25f * (this->maxEnemies - 3)); // Increase multiplier with more max enemies
+    this->pointMulti += (0.25f * (this->settingEnemyHP - 3)); // Increase multiplier with higher enemy HP
+    this->pointMulti += std::min(1-(30.0f/this->enemySpawnTimer),3.0f); // Increase multiplier with faster spawn rate
+    if(this->pointMulti < 0.25f) this->pointMulti = 0.25f; 
 }
 
 void Game::initWindow()
@@ -68,6 +77,7 @@ void Game::initMenu() {
     this->menuTextBack.setPosition({ 250.f, 400.f });
 
 }
+
 
 void Game::initAudio() {
     
@@ -360,6 +370,7 @@ void Game::updateSettings() {
             }
             this->backgroundMusic.setVolume(this->settingVolume);
         }
+        updatePointMulti();
     }
 
     //Highlighting the active field
@@ -562,7 +573,7 @@ void Game::updateEnemies()
                         this->enemies.erase(this->enemies.begin() + i);
 
                         // Gain points after destroy
-                        this->points += 10;
+                        this->points += 10*this->pointMulti;
                     }
 
 

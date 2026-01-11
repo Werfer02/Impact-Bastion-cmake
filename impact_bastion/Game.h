@@ -34,6 +34,7 @@ private:
 
 	//Game logic
 	unsigned points;
+	float pointMulti; 
 	float enemySpawnTimer;
 	float enemySpawnTimerMax;
 	int maxEnemies;
@@ -104,6 +105,7 @@ private:
 
 	//Private functions
 	void initVariables();
+	void updatePointMulti();
 	void initWindow();
 	void initFonts();
 	void initText();
@@ -114,6 +116,7 @@ private:
 	void initMenu();
 	void updateMenu();
 	void updateSettings();
+
 
 public:
 	//Constructors /Destructors
