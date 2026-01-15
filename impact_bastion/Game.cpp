@@ -25,6 +25,7 @@ void Game::initVariables()
     this->settingEnemyHP = 3;//Default HP of enemy
     this->settingVolume = 10.f;
     this->baseTimeLeft = 60.f; // seconds
+    this->endCondition = 0;
 }
 
 void Game::updatePointMulti() {
@@ -104,20 +105,21 @@ void Game::initText() {
     // Endscreen
     this->endscreenMessage.setFont(this->font);
     this->endscreenMessage.setCharacterSize(60);
-    this->endscreenMessage.setPosition({ 200.f, 100.f });
+    this->endscreenMessage.setPosition({ 100.f, 100.f });
 
     this->endscreenMessage2.setFont(this->font);
-    this->endscreenMessage2.setCharacterSize(40);
-    this->endscreenMessage2.setPosition({ 200.f, 200.f });
+    this->endscreenMessage2.setCharacterSize(30);
+    this->endscreenMessage2.setPosition({ 100.f, 200.f });
 
     this->endscreenPoints.setFont(this->font);
     this->endscreenPoints.setCharacterSize(30);
-    this->endscreenPoints.setPosition({ 200.f, 300.f });
+    this->endscreenPoints.setPosition({ 100.f, 300.f });
 
     this->endscreenMenuButton.setFont(this->font);
     this->endscreenMenuButton.setString("BACK TO MENU");
     this->endscreenMenuButton.setCharacterSize(30);
     this->endscreenMenuButton.setFillColor(sf::Color::Yellow);
+    this->endscreenMenuButton.setPosition({ 300.f, 500.f });
 }
 
 
@@ -356,10 +358,12 @@ void Game::pollEvents()
         //Check if the event is a key press
         if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
         {
-            //Close window through pressing Esc
+            //end the game and go to menu on escape
             if (keyPressed->code == sf::Keyboard::Key::Escape)
             {
-                this->window->close();
+                this->endCondition = END_GIVE_UP;
+                this->screen = SCREEN_END;
+                endGameScreen();
             }
         }
     }
@@ -590,8 +594,9 @@ void Game::updateEnemies()
 
         //Collision with player
         if (this->enemies[i].sprite.getGlobalBounds().findIntersection(this->player.getGlobalBounds())) {
-            this->endGame = true;
-            this->window->close();//TODO
+            this->endCondition = END_HIT;
+            this->screen = SCREEN_END;
+            endGameScreen();
         }
 
 
@@ -712,8 +717,16 @@ void Game::update()
         this->updateSettings();
     }
     else if (this->screen == SCREEN_GAME) {
+
         this->updateEnemies();
         this->timeLeft -= 1.f/60.f;
+        if(timeLeft <= 0.f) {
+            this->timeLeft = 0.f;
+            this->endCondition = END_TIME;
+            this->screen = SCREEN_END;
+            endGameScreen();
+        }
+        
         std::stringstream ss;
         ss << "Points: " << this->points;
         this->pointCounter.setString(ss.str());
@@ -722,6 +735,28 @@ void Game::update()
         this->textTimeLeft.setString(ss2.str()); 
     }
   
+}
+
+void Game::endGameScreen() {
+    this->screen = SCREEN_END;
+
+    this->endscreenMessage.setString("GAME OVER");
+    switch(this->endCondition) {
+        case END_TIME:
+            this->endscreenMessage2.setString("YOU SURVIVED! x1.5 BONUS!");
+            this->points = static_cast<int>(this->points * 1.5f);
+            break;
+        case END_HIT:
+            this->endscreenMessage2.setString("YOU WERE HIT!");
+            break;
+        case END_GIVE_UP:
+            this->endscreenMessage2.setString("YOU GAVE UP!");
+            break;
+        default:
+            this->endscreenMessage2.setString("WAIT... WHAT?");
+    }
+
+    this->endscreenPoints.setString("Total Points: " + std::to_string(this->points));
 }
 
 void Game::renderEnemies()
@@ -757,7 +792,10 @@ void Game::render()
             this->window->draw(this->menuTextExit);
         break;
         case SCREEN_END:
-        
+            this->window->draw(this->endscreenMessage);
+            this->window->draw(this->endscreenMessage2);
+            this->window->draw(this->endscreenPoints);
+            this->window->draw(this->endscreenMenuButton);
         break;
         case SCREEN_SETTINGS:
             this->window->draw(this->menuTextPointMulti);

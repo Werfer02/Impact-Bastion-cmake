@@ -18,6 +18,9 @@
 #define SCREEN_SETTINGS 4
 #define SCREEN_STATS 5
 
+#define END_TIME 1
+#define END_HIT 2
+#define END_GIVE_UP 3
 //Class that acts as the game engine
 
 
@@ -46,6 +49,7 @@ private:
     float gravityStrength;
 	int screen;
 	int settingEnemyHP;
+	int endCondition;
 	enum class ActiveSetting { NONE, TIME, ENEMIES, HP, SPAWNRATE, BASESPEED, VOLUME  };
 	ActiveSetting activeSetting = ActiveSetting::NONE;
 	std::string inputBuffer;
@@ -126,6 +130,7 @@ private:
 	void initBlocks();
 	void initPlayer();
 	void initAudio();
+	void endGameScreen();
 	void updateMenu();
 	void updateSettings();
 
