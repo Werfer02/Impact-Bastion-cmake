@@ -4,6 +4,7 @@
 #include <vector>
 #include <ctime>
 #include <sstream>
+#include <cmath>
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
@@ -34,6 +35,8 @@ private:
 
 	//Game logic
 	unsigned points;
+	float timeLeft;
+	float baseTimeLeft;
 	float pointMulti; 
 	float enemySpawnTimer;
 	float enemySpawnTimerMax;
@@ -43,23 +46,29 @@ private:
     float gravityStrength;
 	int screen;
 	int settingEnemyHP;
-	enum class ActiveSetting { NONE, ENEMIES, HP, SPAWNRATE, BASESPEED, VOLUME  };
+	enum class ActiveSetting { NONE, TIME, ENEMIES, HP, SPAWNRATE, BASESPEED, VOLUME  };
 	ActiveSetting activeSetting = ActiveSetting::NONE;
 	std::string inputBuffer;
 	 
 	//Text
 	sf::Font font;
-	sf::Text uiText;
+	sf::Text pointCounter;
+	sf::Text textTimeLeft;
 	sf::Text menuTextStart;
 	sf::Text menuTextSettings;
 	sf::Text menuTextExit;
 	sf::Text menuTextPointMulti;
+	sf::Text menuTextGameTimeSetting;
 	sf::Text menuTextEnemies;
 	sf::Text menuTextHP;
 	sf::Text menuTextSpawnRate;
 	sf::Text menuTextEnemySpeed;
 	sf::Text menuTextVolume;
 	sf::Text menuTextBack;
+	sf::Text endscreenMessage;
+	sf::Text endscreenMessage2;
+	sf::Text endscreenPoints;
+	sf::Text endscreenMenuButton;
 
 	//Music / Sounds
 	sf::Music backgroundMusic;
@@ -117,7 +126,6 @@ private:
 	void initBlocks();
 	void initPlayer();
 	void initAudio();
-	void initMenu();
 	void updateMenu();
 	void updateSettings();
 

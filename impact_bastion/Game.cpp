@@ -6,11 +6,7 @@ void Game::initFonts() {
         std::cout << "Failed to load font!";
     }
 }
-void Game::initText() {
-    this->uiText.setCharacterSize(24);
-    this->uiText.setFillColor(sf::Color::White);
-    this->uiText.setString("NONE");
-}
+
 void Game::initVariables()
 {
 	this->window = nullptr;
@@ -28,6 +24,7 @@ void Game::initVariables()
     this->screen = SCREEN_MENU; //Game starts in menu
     this->settingEnemyHP = 3;//Default HP of enemy
     this->settingVolume = 10.f;
+    this->baseTimeLeft = 60.f; // seconds
 }
 
 void Game::updatePointMulti() {
@@ -48,7 +45,18 @@ void Game::initWindow()
     this->window->setFramerateLimit(60);
 }
 
-void Game::initMenu() {
+void Game::initText() {
+    //Game 
+    this->pointCounter.setCharacterSize(24);
+    this->pointCounter.setFillColor(sf::Color::White);
+    this->pointCounter.setString("NONE");
+    this->pointCounter.setPosition({ 10.f, 10.f });
+
+    this->textTimeLeft.setCharacterSize(24);
+    this->textTimeLeft.setFillColor(sf::Color::White);
+    this->textTimeLeft.setString("Time Left: 60");
+    this->textTimeLeft.setPosition({ 10.f, 40.f });
+
     //Menu
     this->menuTextStart.setFont(this->font);
     this->menuTextStart.setString("START GAME");
@@ -67,28 +75,49 @@ void Game::initMenu() {
 
     //Settings
     this->menuTextPointMulti.setFont(this->font);
-    this->menuTextPointMulti.setPosition({ 250.f, 80.f });
+    this->menuTextPointMulti.setFillColor(sf::Color::Cyan);
+    this->menuTextPointMulti.setPosition({ 200.f, 80.f });
+
+    this->menuTextGameTimeSetting.setFont(this->font);
+    this->menuTextGameTimeSetting.setPosition({ 200.f, 130.f });
 
     this->menuTextEnemies.setFont(this->font);
-    this->menuTextEnemies.setPosition({ 250.f, 150.f });
+    this->menuTextEnemies.setPosition({ 200.f, 180.f });
 
     this->menuTextHP.setFont(this->font);
-    this->menuTextHP.setPosition({ 250.f, 220.f });
+    this->menuTextHP.setPosition({ 200.f, 230.f });
 
     this->menuTextSpawnRate.setFont(this->font);
-    this->menuTextSpawnRate.setPosition({ 250.f, 290.f });
+    this->menuTextSpawnRate.setPosition({ 200.f, 280.f });
 
     this->menuTextEnemySpeed.setFont(this->font);
-    this->menuTextEnemySpeed.setPosition({ 250.f, 360.f });
-    
+    this->menuTextEnemySpeed.setPosition({ 200.f, 330.f });
+
     this->menuTextVolume.setFont(this->font);
-    this->menuTextVolume.setPosition({ 250.f, 430.f });
+    this->menuTextVolume.setPosition({ 200.f, 380.f });
 
     this->menuTextBack.setFont(this->font);
     this->menuTextBack.setString("BACK TO MENU");
     this->menuTextBack.setFillColor(sf::Color::Yellow);
     this->menuTextBack.setPosition({ 250.f, 500.f });
 
+    // Endscreen
+    this->endscreenMessage.setFont(this->font);
+    this->endscreenMessage.setCharacterSize(60);
+    this->endscreenMessage.setPosition({ 200.f, 100.f });
+
+    this->endscreenMessage2.setFont(this->font);
+    this->endscreenMessage2.setCharacterSize(40);
+    this->endscreenMessage2.setPosition({ 200.f, 200.f });
+
+    this->endscreenPoints.setFont(this->font);
+    this->endscreenPoints.setCharacterSize(30);
+    this->endscreenPoints.setPosition({ 200.f, 300.f });
+
+    this->endscreenMenuButton.setFont(this->font);
+    this->endscreenMenuButton.setString("BACK TO MENU");
+    this->endscreenMenuButton.setCharacterSize(30);
+    this->endscreenMenuButton.setFillColor(sf::Color::Yellow);
 }
 
 
@@ -178,7 +207,7 @@ void Game::updateBlockTexture(BlockData& block) {
 
 //Constructors / Destructors
 Game::Game()
-    :uiText(this->font),
+    :pointCounter(this->font),
     menuTextStart(this->font),
     menuTextSettings(this->font),
     menuTextExit(this->font),
@@ -188,7 +217,14 @@ Game::Game()
     menuTextSpawnRate(this->font),
     menuTextEnemySpeed(this->font),
     menuTextVolume(this->font),
-    menuTextBack(this->font) {
+    menuTextBack(this->font),
+    endscreenMenuButton(this->font),
+    endscreenMessage(this->font),
+    endscreenMessage2(this->font),
+    endscreenPoints(this->font),
+    menuTextGameTimeSetting(this->font),
+    textTimeLeft(this->font)
+    {
     this->initFonts();
     this->initText();
 	this->initVariables();
@@ -224,7 +260,6 @@ Game::Game()
         std::cout << "ERROR: ball_b2.png\n";
     this->initBlocks();
     this->initAudio();
-    this->initMenu();
 }
 Game::~Game() {
 	delete this->window;
@@ -344,6 +379,7 @@ void Game::updateMenu()
         if (!this->mouseHeld) {
             this->mouseHeld = true;
             if (this->menuTextStart.getGlobalBounds().contains(this->mousePosView)) {
+                this->timeLeft = baseTimeLeft;
                 this->screen = SCREEN_GAME;
             }
             else if (this->menuTextSettings.getGlobalBounds().contains(this->mousePosView)) {
@@ -360,7 +396,8 @@ void Game::updateMenu()
 }
 
 void Game::updateSettings() {
-    this->menuTextPointMulti.setFillColor(sf::Color::White);
+    this->menuTextPointMulti.setFillColor(sf::Color::Cyan);
+    this->menuTextGameTimeSetting.setFillColor(sf::Color::White);
     this->menuTextEnemies.setFillColor(sf::Color::White);
     this->menuTextHP.setFillColor(sf::Color::White);
     this->menuTextSpawnRate.setFillColor(sf::Color::White);
@@ -370,6 +407,15 @@ void Game::updateSettings() {
     //Update value from buffer
     if (!this->inputBuffer.empty()) {
         int val = std::stoi(this->inputBuffer);
+
+        if (this->activeSetting == ActiveSetting::TIME) {
+            this->baseTimeLeft = static_cast<float>(val);
+            if (this->baseTimeLeft < 10.f) {
+                this->baseTimeLeft = 10.f;
+            } else if (this->baseTimeLeft > 600.f) {
+                this->baseTimeLeft = 600.f;
+            }
+        }
         if (this->activeSetting == ActiveSetting::ENEMIES) {
             this->maxEnemies = val;
             if (this->maxEnemies < 1) {
@@ -415,6 +461,9 @@ void Game::updateSettings() {
     }
 
     //Highlighting the active field
+    if (this->activeSetting == ActiveSetting::TIME) {
+        this->menuTextGameTimeSetting.setFillColor(sf::Color::Yellow);
+    }
     if (this->activeSetting == ActiveSetting::ENEMIES) {
         this->menuTextEnemies.setFillColor(sf::Color::Yellow);
     }
@@ -432,6 +481,7 @@ void Game::updateSettings() {
     }
 
     this->menuTextPointMulti.setString("POINT MULTIPLIER: x" + std::to_string(this->pointMulti).substr(0,4));
+    this->menuTextGameTimeSetting.setString("GAME TIME: " + std::to_string((int)this->baseTimeLeft) + "s");
     this->menuTextEnemies.setString("MAX ENEMIES: " + std::to_string(this->maxEnemies));
     this->menuTextHP.setString("ENEMY HP: " + std::to_string(this->settingEnemyHP));
     this->menuTextSpawnRate.setString("ENEMY SPAWN CD: " + std::to_string((int)this->enemySpawnTimerMax));
@@ -443,7 +493,10 @@ void Game::updateSettings() {
             this->mouseHeld = true;
             this->inputBuffer.clear();
 
-            if (this->menuTextEnemies.getGlobalBounds().contains(this->mousePosView)) {
+            if (this->menuTextGameTimeSetting.getGlobalBounds().contains(this->mousePosView)) {
+                this->activeSetting = ActiveSetting::TIME;
+            }
+            else if (this->menuTextEnemies.getGlobalBounds().contains(this->mousePosView)) {
                 this->activeSetting = ActiveSetting::ENEMIES;
             }
             else if (this->menuTextHP.getGlobalBounds().contains(this->mousePosView)) {
@@ -490,7 +543,7 @@ void Game::updateEnemies()
 
     for (int i = 0; i < this->enemies.size();) {
         bool hitWall = false;
-        this->enemies[i].velocity.y += this->gravityStrength / 5.f;
+        this->enemies[i].velocity.y += this->gravityStrength*this->baseEnemySpeed / 10.f;
         this->enemies[i].sprite.move(this->enemies[i].velocity);
 
         sf::Vector2f pos = this->enemies[i].sprite.getPosition();
@@ -546,13 +599,13 @@ void Game::updateEnemies()
 
         //Bouncing from top and bottom
         if (pos.y <= 0.f) { //top
-            this->enemies[i].velocity.y *= -1.18f; 
+            this->enemies[i].velocity.y *= -1.05f; 
             this->enemies[i].sprite.setPosition({ pos.x, 0.f });
             this->enemies[i].sprite.setScale({ 1.95f, 1.75f }); // Squash effect
             
         }
         else if (pos.y + size.y >= this->window->getSize().y) { //bottom
-            this->enemies[i].velocity.y *= -1.18f;
+            this->enemies[i].velocity.y *= -1.05f;
             this->enemies[i].sprite.setPosition({ pos.x, this->window->getSize().y - size.y });
             this->enemies[i].sprite.setScale({ 1.95f, 1.75f });
             
@@ -560,13 +613,13 @@ void Game::updateEnemies()
 
         //Sides
         if (pos.x <= 0.f) { // Left
-            this->enemies[i].velocity.x *= -1.18f;
+            this->enemies[i].velocity.x *= -1.05f;
             this->enemies[i].sprite.setPosition({ 0.f, pos.y });
             this->enemies[i].sprite.setScale({ 1.75f, 1.95f });
             
         }
         else if (pos.x + size.x >= this->window->getSize().x) { // Right
-            this->enemies[i].velocity.x *= -1.18f;
+            this->enemies[i].velocity.x *= -1.05f;
             this->enemies[i].sprite.setPosition({ this->window->getSize().x - size.x, pos.y });
             this->enemies[i].sprite.setScale({ 1.75f, 1.95f });
             
@@ -660,9 +713,13 @@ void Game::update()
     }
     else if (this->screen == SCREEN_GAME) {
         this->updateEnemies();
+        this->timeLeft -= 1.f/60.f;
         std::stringstream ss;
         ss << "Points: " << this->points;
-        this->uiText.setString(ss.str());
+        this->pointCounter.setString(ss.str());
+        std::stringstream ss2;
+        ss2 << "Time Left: " << round(this->timeLeft * 10.f) / 10.f; 
+        this->textTimeLeft.setString(ss2.str()); 
     }
   
 }
@@ -691,7 +748,8 @@ void Game::render()
 
             this->window->draw(this->player);
 
-            this->window->draw(this->uiText);
+            this->window->draw(this->pointCounter);
+            this->window->draw(this->textTimeLeft);
         break;    
         case SCREEN_MENU:
             this->window->draw(this->menuTextStart);
@@ -703,6 +761,7 @@ void Game::render()
         break;
         case SCREEN_SETTINGS:
             this->window->draw(this->menuTextPointMulti);
+            this->window->draw(this->menuTextGameTimeSetting);
             this->window->draw(this->menuTextEnemies);
             this->window->draw(this->menuTextHP);
             this->window->draw(this->menuTextSpawnRate);
