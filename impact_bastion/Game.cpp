@@ -362,7 +362,6 @@ void Game::pollEvents()
             if (keyPressed->code == sf::Keyboard::Key::Escape)
             {
                 this->endCondition = END_GIVE_UP;
-                this->screen = SCREEN_END;
                 endGameScreen();
             }
         }
@@ -595,7 +594,6 @@ void Game::updateEnemies()
         //Collision with player
         if (this->enemies[i].sprite.getGlobalBounds().findIntersection(this->player.getGlobalBounds())) {
             this->endCondition = END_HIT;
-            this->screen = SCREEN_END;
             endGameScreen();
         }
 
@@ -723,7 +721,6 @@ void Game::update()
         if(timeLeft <= 0.f) {
             this->timeLeft = 0.f;
             this->endCondition = END_TIME;
-            this->screen = SCREEN_END;
             endGameScreen();
         }
         
