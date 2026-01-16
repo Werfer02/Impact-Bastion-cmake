@@ -5,6 +5,7 @@
 #include <ctime>
 #include <sstream>
 #include <cmath>
+#include <fstream>
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
@@ -50,7 +51,8 @@ private:
 	int screen;
 	int settingEnemyHP;
 	int endCondition;
-	enum class ActiveSetting { NONE, TIME, ENEMIES, HP, SPAWNRATE, BASESPEED, VOLUME  };
+	std::string endscreenPlayerName;
+	enum class ActiveSetting { NONE, TIME, ENEMIES, HP, SPAWNRATE, BASESPEED, VOLUME, NAME  };
 	ActiveSetting activeSetting = ActiveSetting::NONE;
 	std::string inputBuffer;
 	 
@@ -69,9 +71,11 @@ private:
 	sf::Text menuTextEnemySpeed;
 	sf::Text menuTextVolume;
 	sf::Text menuTextBack;
+
 	sf::Text endscreenMessage;
 	sf::Text endscreenMessage2;
 	sf::Text endscreenPoints;
+	sf::Text endscreenNameInput;
 	sf::Text endscreenMenuButton;
 
 	//Music / Sounds
@@ -151,6 +155,7 @@ public:
 	void pollEvents();
 	void updateMousePositions();
 	void updateEnemies();
+	void endscreenUpdate();
 	void update();
 
 	void renderEnemies();

@@ -26,6 +26,7 @@ void Game::initVariables()
     this->settingVolume = 10.f;
     this->baseTimeLeft = 60.f; // seconds
     this->endCondition = 0;
+    this->endscreenPlayerName = "";
 }
 
 void Game::updatePointMulti() {
@@ -62,17 +63,17 @@ void Game::initText() {
     this->menuTextStart.setFont(this->font);
     this->menuTextStart.setString("START GAME");
     this->menuTextStart.setCharacterSize(40);
-    this->menuTextStart.setPosition({ 300.f, 150.f });
+    this->menuTextStart.setPosition({ 250.f, 120.f });
 
     this->menuTextSettings.setFont(this->font);
     this->menuTextSettings.setString("SETTINGS");
     this->menuTextSettings.setCharacterSize(40);
-    this->menuTextSettings.setPosition({ 300.f, 250.f });
+    this->menuTextSettings.setPosition({ 250.f, 200.f });
 
     this->menuTextExit.setFont(this->font);
     this->menuTextExit.setString("EXIT");
     this->menuTextExit.setCharacterSize(40);
-    this->menuTextExit.setPosition({ 300.f, 350.f });
+    this->menuTextExit.setPosition({ 250.f, 400.f });
 
     //Settings
     this->menuTextPointMulti.setFont(this->font);
@@ -115,11 +116,16 @@ void Game::initText() {
     this->endscreenPoints.setCharacterSize(30);
     this->endscreenPoints.setPosition({ 100.f, 300.f });
 
+    this->endscreenNameInput.setFont(this->font);
+    this->endscreenNameInput.setString("NAME: ______");
+    this->endscreenNameInput.setCharacterSize(30);
+    this->endscreenNameInput.setPosition({ 100.f, 400.f });
+
     this->endscreenMenuButton.setFont(this->font);
-    this->endscreenMenuButton.setString("BACK TO MENU");
+    this->endscreenMenuButton.setString("SAVE AND RETURN");
     this->endscreenMenuButton.setCharacterSize(30);
     this->endscreenMenuButton.setFillColor(sf::Color::Yellow);
-    this->endscreenMenuButton.setPosition({ 300.f, 500.f });
+    this->endscreenMenuButton.setPosition({ 250.f, 500.f });
 }
 
 
@@ -220,10 +226,11 @@ Game::Game()
     menuTextEnemySpeed(this->font),
     menuTextVolume(this->font),
     menuTextBack(this->font),
-    endscreenMenuButton(this->font),
     endscreenMessage(this->font),
     endscreenMessage2(this->font),
     endscreenPoints(this->font),
+    endscreenNameInput(this->font),
+    endscreenMenuButton(this->font),
     menuTextGameTimeSetting(this->font),
     textTimeLeft(this->font)
     {
@@ -347,7 +354,13 @@ void Game::pollEvents()
                     this->activeSetting = ActiveSetting::NONE;
                     this->inputBuffer.clear();
                 }
-                else if (unicode >= '0' && unicode <= '9') { // Only numbers
+                else if (this->activeSetting == ActiveSetting::NAME) { // Only letters and underscore for name
+                    if (this->inputBuffer.size() < 16) {
+                        if ((unicode >= 'A' && unicode <= 'Z') || (unicode >= 'a' && unicode <= 'z') || unicode == '_')
+                        this->inputBuffer += static_cast<char>(unicode);
+                    }
+                }
+                else if (unicode >= '0' && unicode <= '9') { // Only numbers for other settings
                     if (this->inputBuffer.size() < 3) { // Limit 
                         this->inputBuffer += static_cast<char>(unicode);
                     }
@@ -700,6 +713,110 @@ void Game::updateEnemies()
     
 }
 
+void Game::endGameScreen() {
+    this->screen = SCREEN_END;
+
+    this->endscreenMessage.setString("GAME OVER");
+    switch(this->endCondition) {
+        case END_TIME:
+            this->endscreenMessage2.setString("YOU SURVIVED! x1.5 BONUS!");
+            this->points = static_cast<int>(this->points * 1.5f);
+            break;
+        case END_HIT:
+            this->endscreenMessage2.setString("YOU WERE HIT!");
+            break;
+        case END_GIVE_UP:
+            this->endscreenMessage2.setString("YOU GAVE UP!");
+            break;
+        default:
+            this->endscreenMessage2.setString("WAIT... WHAT?");
+    }
+
+    this->endscreenPoints.setString("Total Points: " + std::to_string(this->points));
+}
+
+void saveScoreToFile(const std::string& name, int score) {
+
+    //load contents of gameData/scores.txt into vector (each line starts from score then name)
+    std::vector<std::pair<int, std::string>> scores;
+    std::ifstream inputFile("gameData/scores.txt");
+    if (inputFile.is_open()) {
+        std::string line;
+        while (std::getline(inputFile, line)) {
+            std::istringstream iss(line);
+            int s;
+            std::string n;
+            if (iss >> s >> n) {
+                scores.emplace_back(s, n);
+            }
+        }
+        inputFile.close();
+    }
+
+    //sort the scores in descending order
+    scores.emplace_back(score, name);
+    std::sort(scores.begin(), scores.end(), [](const auto& a, const auto& b) {
+        return a.first > b.first;
+    });
+    //keep only top 10 scores and write back to file
+    std::ofstream outputFile("gameData/scores.txt");
+    if (outputFile.is_open()) {
+        for (size_t i = 0; i < scores.size() && i < 10; ++i) {
+            outputFile << scores[i].first << " " << scores[i].second << "\n";
+        }
+        outputFile.close();
+    }
+    
+}
+
+void Game::endscreenUpdate() {
+
+        //handle endscreen buttons
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+            if (!this->mouseHeld) {
+                this->mouseHeld = true;
+                this->inputBuffer.clear();
+
+                if (this->endscreenMenuButton.getGlobalBounds().contains(this->mousePosView)) {
+                    
+                    //save score to file
+                    saveScoreToFile(this->endscreenPlayerName, this->points);
+                    // Reset game state
+                    this->points = 0;
+                    this->enemies.clear();
+                    this->blocks.clear();
+                    this->initBlocks();
+                    this->screen = SCREEN_MENU;
+
+                }
+                else if (this->endscreenNameInput.getGlobalBounds().contains(this->mousePosView)) {
+                    // Activate name input
+                    this->activeSetting = ActiveSetting::NAME;
+                }
+                else {
+                    this->activeSetting = ActiveSetting::NONE;
+                }
+            }
+        }
+        else {
+            this->mouseHeld = false;
+        }
+    
+    // get player name input
+        std::string val = this->inputBuffer;
+        if (this->activeSetting == ActiveSetting::NAME) {
+            this->endscreenPlayerName = val;
+            this->endscreenNameInput.setString("NAME: " + this->endscreenPlayerName + "_");
+            this->endscreenNameInput.setFillColor(sf::Color::Yellow);
+        }
+        else {
+            this->activeSetting = ActiveSetting::NONE;
+            this->endscreenNameInput.setString("NAME: " + this->endscreenPlayerName);
+            this->endscreenNameInput.setFillColor(sf::Color::White);   
+        }
+
+
+}
 
 void Game::update()
 {
@@ -731,30 +848,12 @@ void Game::update()
         ss2 << "Time Left: " << round(this->timeLeft * 10.f) / 10.f; 
         this->textTimeLeft.setString(ss2.str()); 
     }
-  
-}
-
-void Game::endGameScreen() {
-    this->screen = SCREEN_END;
-
-    this->endscreenMessage.setString("GAME OVER");
-    switch(this->endCondition) {
-        case END_TIME:
-            this->endscreenMessage2.setString("YOU SURVIVED! x1.5 BONUS!");
-            this->points = static_cast<int>(this->points * 1.5f);
-            break;
-        case END_HIT:
-            this->endscreenMessage2.setString("YOU WERE HIT!");
-            break;
-        case END_GIVE_UP:
-            this->endscreenMessage2.setString("YOU GAVE UP!");
-            break;
-        default:
-            this->endscreenMessage2.setString("WAIT... WHAT?");
+    else if (this->screen == SCREEN_END) {
+        this->endscreenUpdate();
     }
-
-    this->endscreenPoints.setString("Total Points: " + std::to_string(this->points));
 }
+
+
 
 void Game::renderEnemies()
 {
@@ -792,6 +891,7 @@ void Game::render()
             this->window->draw(this->endscreenMessage);
             this->window->draw(this->endscreenMessage2);
             this->window->draw(this->endscreenPoints);
+            this->window->draw(this->endscreenNameInput);
             this->window->draw(this->endscreenMenuButton);
         break;
         case SCREEN_SETTINGS:
