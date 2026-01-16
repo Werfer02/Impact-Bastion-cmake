@@ -70,6 +70,11 @@ void Game::initText() {
     this->menuTextSettings.setCharacterSize(40);
     this->menuTextSettings.setPosition({ 250.f, 200.f });
 
+    this->menuTextStats.setFont(this->font);
+    this->menuTextStats.setString("STATS");
+    this->menuTextStats.setCharacterSize(40);
+    this->menuTextStats.setPosition({ 250.f, 280.f });
+
     this->menuTextExit.setFont(this->font);
     this->menuTextExit.setString("EXIT");
     this->menuTextExit.setCharacterSize(40);
@@ -126,8 +131,30 @@ void Game::initText() {
     this->endscreenMenuButton.setCharacterSize(30);
     this->endscreenMenuButton.setFillColor(sf::Color::Yellow);
     this->endscreenMenuButton.setPosition({ 250.f, 500.f });
-}
 
+    //stats screen
+
+    this->statsTitle.setFont(this->font);
+    this->statsTitle.setString("LEADERBOARD");
+    this->statsTitle.setCharacterSize(40);
+    this->statsTitle.setPosition({ 270.f, 50.f });
+
+    this->statsNameList.setFont(this->font);
+    this->statsNameList.setString("NAME");
+    this->statsNameList.setCharacterSize(20);
+    this->statsNameList.setPosition({ 180.f, 120.f });
+
+    this->statsPointsList.setFont(this->font);
+    this->statsPointsList.setString("POINTS");
+    this->statsPointsList.setCharacterSize(20);
+    this->statsPointsList.setPosition({ 580.f, 120.f });
+
+    this->statsReturnButton.setFont(this->font);
+    this->statsReturnButton.setString("RETURN TO MENU");
+    this->statsReturnButton.setCharacterSize(30);
+    this->statsReturnButton.setFillColor(sf::Color::Yellow);
+    this->statsReturnButton.setPosition({ 280.f, 500.f });
+}
 
 void Game::initAudio() {
     
@@ -218,6 +245,7 @@ Game::Game()
     :pointCounter(this->font),
     menuTextStart(this->font),
     menuTextSettings(this->font),
+    menuTextStats(this->font),
     menuTextExit(this->font),
     menuTextPointMulti(this->font),
     menuTextEnemies(this->font),
@@ -232,6 +260,10 @@ Game::Game()
     endscreenNameInput(this->font),
     endscreenMenuButton(this->font),
     menuTextGameTimeSetting(this->font),
+    statsTitle(this->font),
+    statsNameList(this->font),
+    statsPointsList(this->font),
+    statsReturnButton(this->font),
     textTimeLeft(this->font)
     {
     this->initFonts();
@@ -400,6 +432,10 @@ void Game::updateMenu()
             }
             else if (this->menuTextSettings.getGlobalBounds().contains(this->mousePosView)) {
                 this->screen = SCREEN_SETTINGS;
+            }
+            else if( this->menuTextStats.getGlobalBounds().contains(this->mousePosView)) {
+                this->loadStatsScreen();
+                this->screen = SCREEN_STATS;
             }
             else if (this->menuTextExit.getGlobalBounds().contains(this->mousePosView)) {
                 this->window->close();
@@ -818,6 +854,43 @@ void Game::endscreenUpdate() {
 
 }
 
+void Game::loadStatsScreen() {
+    //load scores from file
+    std::ifstream inputFile("gameData/scores.txt");
+    std::string names;
+    std::string points;
+    if (inputFile.is_open()) {
+        std::string line;
+        while (std::getline(inputFile, line)) {
+            std::istringstream iss(line);
+            int s;
+            std::string n;
+            if (iss >> s >> n) {
+                names += n + "\n";
+                points += std::to_string(s) + "\n";
+            }
+        }
+        inputFile.close();
+    }
+    this->statsNameList.setString(names);
+    this->statsPointsList.setString(points);
+
+}
+
+void Game::UpdateStatsScreen() {
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+        if (!this->mouseHeld) {
+            this->mouseHeld = true;
+            if (this->statsReturnButton.getGlobalBounds().contains(this->mousePosView)) {
+                this->screen = SCREEN_MENU;
+            }
+        }
+    }
+    else {
+        this->mouseHeld = false;
+    }
+}
+
 void Game::update()
 {
     this->pollEvents();
@@ -850,6 +923,9 @@ void Game::update()
     }
     else if (this->screen == SCREEN_END) {
         this->endscreenUpdate();
+    }
+    else if (this->screen == SCREEN_STATS) {
+        this->UpdateStatsScreen();
     }
 }
 
@@ -885,6 +961,7 @@ void Game::render()
         case SCREEN_MENU:
             this->window->draw(this->menuTextStart);
             this->window->draw(this->menuTextSettings);
+            this->window->draw(this->menuTextStats);
             this->window->draw(this->menuTextExit);
         break;
         case SCREEN_END:
@@ -903,6 +980,12 @@ void Game::render()
             this->window->draw(this->menuTextEnemySpeed);
             this->window->draw(this->menuTextVolume);
             this->window->draw(this->menuTextBack);
+            break;
+        case SCREEN_STATS:
+            this->window->draw(this->statsTitle);
+            this->window->draw(this->statsNameList);
+            this->window->draw(this->statsPointsList);
+            this->window->draw(this->statsReturnButton);
             break;
         default: this->screen = SCREEN_GAME;
     }

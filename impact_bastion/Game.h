@@ -58,11 +58,17 @@ private:
 	 
 	//Text
 	sf::Font font;
+	//game UI
 	sf::Text pointCounter;
 	sf::Text textTimeLeft;
+
+	//menu
 	sf::Text menuTextStart;
 	sf::Text menuTextSettings;
+	sf::Text menuTextStats;
 	sf::Text menuTextExit;
+	
+	//settings
 	sf::Text menuTextPointMulti;
 	sf::Text menuTextGameTimeSetting;
 	sf::Text menuTextEnemies;
@@ -72,11 +78,18 @@ private:
 	sf::Text menuTextVolume;
 	sf::Text menuTextBack;
 
+	//endscreen
 	sf::Text endscreenMessage;
 	sf::Text endscreenMessage2;
 	sf::Text endscreenPoints;
 	sf::Text endscreenNameInput;
 	sf::Text endscreenMenuButton;
+
+	//stats screen
+	sf::Text statsTitle;
+	sf::Text statsNameList;
+	sf::Text statsPointsList;
+	sf::Text statsReturnButton;
 
 	//Music / Sounds
 	sf::Music backgroundMusic;
@@ -137,8 +150,9 @@ private:
 	void endGameScreen();
 	void updateMenu();
 	void updateSettings();
-
-
+	void endscreenUpdate();
+	void loadStatsScreen();
+	void UpdateStatsScreen();
 public:
 	//Constructors /Destructors
 	Game();
@@ -155,9 +169,7 @@ public:
 	void pollEvents();
 	void updateMousePositions();
 	void updateEnemies();
-	void endscreenUpdate();
 	void update();
-
 	void renderEnemies();
 	void render();
 };
