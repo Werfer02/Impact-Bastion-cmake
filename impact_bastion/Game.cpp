@@ -50,63 +50,67 @@ void Game::initWindow()
 void Game::initText() {
     //Game 
     this->pointCounter.setCharacterSize(24);
-    this->pointCounter.setFillColor(sf::Color::White);
+    this->pointCounter.setFillColor(sf::Color::Yellow);
     this->pointCounter.setString("NONE");
     this->pointCounter.setPosition({ 10.f, 10.f });
 
     this->textTimeLeft.setCharacterSize(24);
-    this->textTimeLeft.setFillColor(sf::Color::White);
+    this->textTimeLeft.setFillColor(sf::Color::Cyan);
     this->textTimeLeft.setString("Time Left: 60");
     this->textTimeLeft.setPosition({ 10.f, 40.f });
 
     //Menu
     this->menuTextStart.setFont(this->font);
     this->menuTextStart.setString("START GAME");
+    this->menuTextStart.setFillColor(sf::Color::Green);
     this->menuTextStart.setCharacterSize(40);
-    this->menuTextStart.setPosition({ 250.f, 120.f });
+    this->menuTextStart.setPosition({ 260.f, 120.f });
 
     this->menuTextSettings.setFont(this->font);
     this->menuTextSettings.setString("SETTINGS");
+    this->menuTextSettings.setFillColor(sf::Color::Cyan);
     this->menuTextSettings.setCharacterSize(40);
-    this->menuTextSettings.setPosition({ 250.f, 200.f });
+    this->menuTextSettings.setPosition({ 290.f, 200.f });
 
     this->menuTextStats.setFont(this->font);
     this->menuTextStats.setString("STATS");
+    this->menuTextStats.setFillColor(sf::Color::Yellow);
     this->menuTextStats.setCharacterSize(40);
-    this->menuTextStats.setPosition({ 250.f, 280.f });
+    this->menuTextStats.setPosition({ 320.f, 280.f });
 
     this->menuTextExit.setFont(this->font);
     this->menuTextExit.setString("EXIT");
+    this->menuTextExit.setFillColor(sf::Color::Red);
     this->menuTextExit.setCharacterSize(40);
-    this->menuTextExit.setPosition({ 250.f, 400.f });
+    this->menuTextExit.setPosition({ 340.f, 450.f });
 
     //Settings
     this->menuTextPointMulti.setFont(this->font);
     this->menuTextPointMulti.setFillColor(sf::Color::Cyan);
-    this->menuTextPointMulti.setPosition({ 200.f, 80.f });
+    this->menuTextPointMulti.setPosition({ 230.f, 40.f });
 
     this->menuTextGameTimeSetting.setFont(this->font);
-    this->menuTextGameTimeSetting.setPosition({ 200.f, 130.f });
+    this->menuTextGameTimeSetting.setPosition({ 50.f, 130.f });
 
     this->menuTextEnemies.setFont(this->font);
-    this->menuTextEnemies.setPosition({ 200.f, 180.f });
+    this->menuTextEnemies.setPosition({ 50.f, 180.f });
 
     this->menuTextHP.setFont(this->font);
-    this->menuTextHP.setPosition({ 200.f, 230.f });
+    this->menuTextHP.setPosition({ 50.f, 230.f });
 
     this->menuTextSpawnRate.setFont(this->font);
-    this->menuTextSpawnRate.setPosition({ 200.f, 280.f });
+    this->menuTextSpawnRate.setPosition({ 50.f, 280.f });
 
     this->menuTextEnemySpeed.setFont(this->font);
-    this->menuTextEnemySpeed.setPosition({ 200.f, 330.f });
+    this->menuTextEnemySpeed.setPosition({ 50.f, 330.f });
 
     this->menuTextVolume.setFont(this->font);
-    this->menuTextVolume.setPosition({ 200.f, 380.f });
+    this->menuTextVolume.setPosition({ 50.f, 380.f });
 
     this->menuTextBack.setFont(this->font);
     this->menuTextBack.setString("BACK TO MENU");
     this->menuTextBack.setFillColor(sf::Color::Yellow);
-    this->menuTextBack.setPosition({ 250.f, 500.f });
+    this->menuTextBack.setPosition({ 300.f, 500.f });
 
     // Endscreen
     this->endscreenMessage.setFont(this->font);
@@ -183,7 +187,7 @@ void Game::initPlayer() {
     this->player.setRadius(15.f);
     this->player.setFillColor(sf::Color::Blue);
    
-    this->player.setPosition({ 400.f - 15.f, 570.f });
+    this->player.setPosition({ 400.f + 21.f, 570.f });
 }
 
 void Game::initBlocks() {
@@ -473,6 +477,9 @@ void Game::updateSettings() {
             if (this->maxEnemies < 1) {
                 this->maxEnemies = 1;
             }
+            else if (this->maxEnemies > 10) {
+                this->maxEnemies = 10;
+            }
         }
         if (this->activeSetting == ActiveSetting::HP) {
             this->settingEnemyHP = val;
@@ -753,16 +760,24 @@ void Game::endGameScreen() {
     this->screen = SCREEN_END;
 
     this->endscreenMessage.setString("GAME OVER");
+
     switch(this->endCondition) {
         case END_TIME:
             this->endscreenMessage2.setString("YOU SURVIVED! x1.5 BONUS!");
             this->points = static_cast<int>(this->points * 1.5f);
+            this->endscreenMessage2.setFillColor(sf::Color::Green);
+            this->endscreenMessage.setString("CONGRATULATIONS!");
+            this->endscreenMessage.setFillColor(sf::Color::Green);
             break;
         case END_HIT:
             this->endscreenMessage2.setString("YOU WERE HIT!");
+            this->endscreenMessage2.setFillColor(sf::Color::Red);
+            this->endscreenMessage.setFillColor(sf::Color::Red);
             break;
         case END_GIVE_UP:
             this->endscreenMessage2.setString("YOU GAVE UP!");
+            this->endscreenMessage2.setFillColor(sf::Color::White);
+            this->endscreenMessage.setFillColor(sf::Color::White);
             break;
         default:
             this->endscreenMessage2.setString("WAIT... WHAT?");
@@ -842,12 +857,12 @@ void Game::endscreenUpdate() {
         std::string val = this->inputBuffer;
         if (this->activeSetting == ActiveSetting::NAME) {
             this->endscreenPlayerName = val;
-            this->endscreenNameInput.setString("NAME: " + this->endscreenPlayerName + "_");
+            this->endscreenNameInput.setString("ENTER YOUR NAME: " + this->endscreenPlayerName + "_");
             this->endscreenNameInput.setFillColor(sf::Color::Yellow);
         }
         else {
             this->activeSetting = ActiveSetting::NONE;
-            this->endscreenNameInput.setString("NAME: " + this->endscreenPlayerName);
+            this->endscreenNameInput.setString("ENTER YOUR NAME: " + this->endscreenPlayerName);
             this->endscreenNameInput.setFillColor(sf::Color::White);   
         }
 
