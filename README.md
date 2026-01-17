@@ -1,2 +1,8 @@
 # Impact-Bastion
+
 Gra na zaliczenie z Podstaw Informatyki
+
+
+
+Jak uruchomić grę?
+

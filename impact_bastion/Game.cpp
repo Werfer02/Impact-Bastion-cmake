@@ -195,7 +195,7 @@ void Game::initBlocks() {
     float groundY = 600.f;
 
     for (int i = 0; i < 4; i++) {         // 4 columns
-        for (int j = 0; j < 10; j++) {     // 4 layers
+        for (int j = 0; j < 10; j++) {     // 10 layers
             if (j == 0 && (i == 1 || i == 2)) continue; // Space for player
 
             int randomHP = (std::rand() % 3) + 1; // Random hp (1,2 or 3)
