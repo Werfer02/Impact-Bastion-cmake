@@ -831,6 +831,9 @@ void Game::endscreenUpdate() {
                 if (this->endscreenMenuButton.getGlobalBounds().contains(this->mousePosView)) {
                     
                     //save score to file
+                    if( this->endscreenPlayerName.empty()) {
+                        this->endscreenPlayerName = "ANONYMOUS";
+                    }
                     saveScoreToFile(this->endscreenPlayerName, this->points);
                     // Reset game state
                     this->points = 0;
