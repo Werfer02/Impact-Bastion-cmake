@@ -1,6 +1,8 @@
 ﻿  Game.cpp
-C:\Users\sowam\Documents\GitHub\Impact-Bastion\impact_bastion\Game.cpp(27,29): warning C4305: "=": obcięcie z "double" do "float"
-C:\Users\sowam\Documents\GitHub\Impact-Bastion\impact_bastion\Game.cpp(386,40): warning C4244: "=": konwersja z "int" do "float", możliwa utrata danych
-C:\Users\sowam\Documents\GitHub\Impact-Bastion\impact_bastion\Game.cpp(394,36): warning C4244: "=": konwersja z "int" do "float", możliwa utrata danych
-C:\Users\sowam\Documents\GitHub\Impact-Bastion\impact_bastion\Game.cpp(631,43): warning C4244: "+=": konwersja z "float" do "unsigned int", możliwa utrata danych
+C:\Users\sowam\Documents\GitHub\Impact-Bastion\impact_bastion\Game.cpp(23,29): warning C4305: "=": obcięcie z "double" do "float"
+C:\Users\sowam\Documents\GitHub\Impact-Bastion\impact_bastion\Game.cpp(501,40): warning C4244: "=": konwersja z "int" do "float", możliwa utrata danych
+C:\Users\sowam\Documents\GitHub\Impact-Bastion\impact_bastion\Game.cpp(509,36): warning C4244: "=": konwersja z "int" do "float", możliwa utrata danych
+C:\Users\sowam\Documents\GitHub\Impact-Bastion\impact_bastion\Game.cpp(745,43): warning C4244: "+=": konwersja z "float" do "unsigned int", możliwa utrata danych
+  main.cpp
+  Generowanie kodu...
   impact_bastion.vcxproj -> C:\Users\sowam\Documents\GitHub\Impact-Bastion\x64\Debug\impact_bastion.exe
