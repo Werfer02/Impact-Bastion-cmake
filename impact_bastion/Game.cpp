@@ -26,7 +26,7 @@ void Game::initVariables()
     this->settingVolume = 10.f;
     this->baseTimeLeft = 60.f; // seconds
     this->endCondition = 0;
-    this->endscreenPlayerName = "";
+    this->endscreenPlayerName = "ANONYMOUS";
 }
 
 void Game::updatePointMulti() {
@@ -195,7 +195,7 @@ void Game::initBlocks() {
     float groundY = 600.f;
 
     for (int i = 0; i < 4; i++) {         // 4 columns
-        for (int j = 0; j < 10; j++) {     // 10 layers
+        for (int j = 0; j < 10; j++) {     // 4 layers
             if (j == 0 && (i == 1 || i == 2)) continue; // Space for player
 
             int randomHP = (std::rand() % 3) + 1; // Random hp (1,2 or 3)
@@ -355,8 +355,8 @@ void Game::spawnEnemy()
     //HP points of enemy
 
     auto& lastEnemy = this->enemies.back();
-    lastEnemy.sprite.setScale({ 3.6f, 3.6f });
-    lastEnemy.hp = 3;
+    lastEnemy.sprite.setScale({ 1.6f, 1.6f });
+    lastEnemy.hp = this->settingEnemyHP;
     lastEnemy.bounced = false;
     lastEnemy.velocity = sf::Vector2f(this->baseEnemySpeed, this->baseEnemySpeed);
 
@@ -485,6 +485,9 @@ void Game::updateSettings() {
             this->settingEnemyHP = val;
             if (this->settingEnemyHP <1) {
                 this->settingEnemyHP = 1;
+            }
+            else if (this->settingEnemyHP > 20) {
+                this->settingEnemyHP = 20;
             }
         }
         if (this->activeSetting == ActiveSetting::SPAWNRATE) {
@@ -616,18 +619,18 @@ void Game::updateEnemies()
                 if (!this->enemies[i].bounced) {
                     bounceEnemy(this->enemies[i], this->blocks[b]);
                     this->enemies[i].bounced = true;
+                    this->enemies[i].hp -= 1;    
                 }
 
                 // Damage block
                 this->blocks[b].hp -= 1;
                 this->updateBlockTexture(this->blocks[b]);
                 
-                this->enemies[i].hp -= 1;
 
-                if (this->enemies[i].hp == 2)
-                    this->enemies[i].sprite.setTexture(this->enemyTextures[1]);
-                else if (this->enemies[i].hp == 1)
+                if (this->enemies[i].hp <= this->settingEnemyHP / 3)
                     this->enemies[i].sprite.setTexture(this->enemyTextures[2]);
+                else if (this->enemies[i].hp <= this->settingEnemyHP * 2 / 3)
+                    this->enemies[i].sprite.setTexture(this->enemyTextures[1]);
 
 
                 // Destroy block
@@ -636,16 +639,11 @@ void Game::updateEnemies()
                 }
 
                 // Damage enemy
-                this->enemies[i].hp -= 1;
-
-                if (this->enemies[i].hp == 2)
-                    this->enemies[i].sprite.setTexture(this->enemyTextures[1]);
-                else if (this->enemies[i].hp == 1)
-                    this->enemies[i].sprite.setTexture(this->enemyTextures[2]);
 
                 break; 
             }
         }
+        this->enemies[i].bounced = false; // Reset bounced for next frame
 
         //Collision with player
         if (this->enemies[i].sprite.getGlobalBounds().findIntersection(this->player.getGlobalBounds())) {
@@ -660,13 +658,13 @@ void Game::updateEnemies()
         if (pos.y <= 0.f) { //top
             this->enemies[i].velocity.y *= -1.05f; 
             this->enemies[i].sprite.setPosition({ pos.x, 0.f });
-            this->enemies[i].sprite.setScale({ 1.95f, 1.75f }); // Squash effect
+            this->enemies[i].sprite.setScale({ 1.9f, 1.3f }); // Squash effect
             
         }
         else if (pos.y + size.y >= this->window->getSize().y) { //bottom
             this->enemies[i].velocity.y *= -1.05f;
             this->enemies[i].sprite.setPosition({ pos.x, this->window->getSize().y - size.y });
-            this->enemies[i].sprite.setScale({ 1.95f, 1.75f });
+            this->enemies[i].sprite.setScale({ 1.9f, 1.3f });
             
         }
 
@@ -674,21 +672,21 @@ void Game::updateEnemies()
         if (pos.x <= 0.f) { // Left
             this->enemies[i].velocity.x *= -1.05f;
             this->enemies[i].sprite.setPosition({ 0.f, pos.y });
-            this->enemies[i].sprite.setScale({ 1.75f, 1.95f });
+            this->enemies[i].sprite.setScale({ 1.3f, 1.9f });
             
         }
         else if (pos.x + size.x >= this->window->getSize().x) { // Right
             this->enemies[i].velocity.x *= -1.05f;
             this->enemies[i].sprite.setPosition({ this->window->getSize().x - size.x, pos.y });
-            this->enemies[i].sprite.setScale({ 1.75f, 1.95f });
+            this->enemies[i].sprite.setScale({ 1.3f, 1.9f });
             
         }
 
 
         //Squash & Stretch
         sf::Vector2f currentScale = this->enemies[i].sprite.getScale();
-        float targetScale = 3.6f; // from initEnemies
-        float recoverySpeed = 0.7f;
+        float targetScale = 1.6f; // from initEnemies
+        float recoverySpeed = 0.05f;
 
         if (currentScale.x < targetScale) currentScale.x += recoverySpeed;
         if (currentScale.x > targetScale) currentScale.x -= recoverySpeed;
@@ -700,12 +698,11 @@ void Game::updateEnemies()
         if (hitWall) {
             this->enemies[i].hp -= 1;
 
-            if (this->enemies[i].hp == 2) {
-                this->enemies[i].sprite.setTexture(this->enemyTextures[1]);
-            }
-            if (this->enemies[i].hp == 1) {
-                this->enemies[i].sprite.setTexture(this->enemyTextures[2]);
-            }
+                if (this->enemies[i].hp <= this->settingEnemyHP / 3)
+                    this->enemies[i].sprite.setTexture(this->enemyTextures[2]);
+                else if (this->enemies[i].hp <= this->settingEnemyHP * 2 / 3)
+                    this->enemies[i].sprite.setTexture(this->enemyTextures[1]);
+
         }
         if (this->enemies[i].hp <= 0) {
             this->enemies.erase(this ->enemies.begin() + i);
@@ -728,12 +725,10 @@ void Game::updateEnemies()
                     this->enemies[i].hp -= 1;
 
 
-                    if (this->enemies[i].hp == 2) {
-                        this->enemies[i].sprite.setTexture(this->enemyTextures[1]);
-                    }
-                    else if (this->enemies[i].hp == 1) {
+                    if (this->enemies[i].hp <= this->settingEnemyHP / 3)
                         this->enemies[i].sprite.setTexture(this->enemyTextures[2]);
-                    }
+                    else if (this->enemies[i].hp <= this->settingEnemyHP * 2 / 3)
+                        this->enemies[i].sprite.setTexture(this->enemyTextures[1]);
 
 
                     if (this->enemies[i].hp <= 0) {
