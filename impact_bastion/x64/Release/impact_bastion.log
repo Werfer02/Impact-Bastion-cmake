@@ -1,6 +1,11 @@
-﻿  Trwa generowanie kodu
-  0 of 502 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    0 functions had inline decision re-evaluated but remain unchanged
+﻿  Game.cpp
+C:\Users\sowam\Documents\GitHub\Impact-Bastion\impact_bastion\Game.cpp(23,29): warning C4305: "=": obcięcie z "double" do "float"
+C:\Users\sowam\Documents\GitHub\Impact-Bastion\impact_bastion\Game.cpp(491,40): warning C4244: "=": konwersja z "int" do "float", możliwa utrata danych
+C:\Users\sowam\Documents\GitHub\Impact-Bastion\impact_bastion\Game.cpp(499,36): warning C4244: "=": konwersja z "int" do "float", możliwa utrata danych
+C:\Users\sowam\Documents\GitHub\Impact-Bastion\impact_bastion\Game.cpp(743,43): warning C4244: "+=": konwersja z "float" do "unsigned int", możliwa utrata danych
+  main.cpp
+  Trwa generowanie kodu
+  Previous IPDB and IOBJ mismatch, fall back to full compilation.
+  All 737 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
   Zakończono generowanie kodu
   impact_bastion.vcxproj -> C:\Users\sowam\Documents\GitHub\Impact-Bastion\x64\Release\impact_bastion.exe
