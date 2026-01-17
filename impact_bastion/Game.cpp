@@ -358,13 +358,20 @@ void Game::spawnEnemy()
     lastEnemy.sprite.setScale({ 1.6f, 1.6f });
     lastEnemy.hp = this->settingEnemyHP;
     lastEnemy.bounced = false;
-    lastEnemy.velocity = sf::Vector2f(this->baseEnemySpeed, this->baseEnemySpeed);
 
     float windowHeight = static_cast<float>(this->window->getSize().y);
     float enemyHeight = lastEnemy.sprite.getGlobalBounds().size.y;
     float posY = static_cast<float>(rand() % static_cast<int>(windowHeight - enemyHeight));
 
-    lastEnemy.sprite.setPosition({ 5.f, posY });
+    bool side = rand() % 2;
+    if(side) {
+        lastEnemy.sprite.setPosition({ 5.f, posY });
+        lastEnemy.velocity = sf::Vector2f(this->baseEnemySpeed, this->baseEnemySpeed);
+    }
+    else {
+        lastEnemy.sprite.setPosition({ static_cast<float>(this->window->getSize().x) - enemyHeight - 5.f, posY });
+        lastEnemy.velocity = sf::Vector2f(-this->baseEnemySpeed, this->baseEnemySpeed);
+    }
 }
 
 
