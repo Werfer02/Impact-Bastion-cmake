@@ -1,107 +1,426 @@
 #include "Game.h"
 
-#include <filesystem>
-
-#define SIGN(x) ((x > 0) - (x < 0))
+#include <algorithm>
 
 //Private functions
 void Game::initFonts() {
-    if (!font.openFromFile(std::filesystem::path("./Roboto-Bold.ttf"))) {
+    if (!this->font.openFromFile("Roboto-Bold.ttf")) {
         std::cout << "Failed to load font!";
     }
 }
-void Game::initText() {
-    uiText.setCharacterSize(24);
-    uiText.setFillColor(sf::Color::White);
-    uiText.setString("NONE");
-}
+
 void Game::initVariables()
 {
-	window = nullptr;
+	this->window = nullptr;
 
     //Game logic
-    points = 0;
-    enemySpawnTimerMax = 30.f;
-    enemySpawnTimer = enemySpawnTimerMax;
-    maxEnemies = 3;
-    mouseHeld = false;
+    this->points = 0;
+    this->pointMulti = 1.0f;
+    this->enemySpawnTimerMax = 50.f;
+    this->enemySpawnTimer = this->enemySpawnTimerMax;
+    this->maxEnemies = 3;
+    this->baseEnemySpeed = 2.f;
+    this->mouseHeld = false;
+    this->endGame = false;
+    this->gravityStrength = 0.3;
+    this->screen = SCREEN_MENU; //Game starts in menu
+    this->settingEnemyHP = 3;//Default HP of enemy
+    this->settingVolume = 10.f;
+    this->baseTimeLeft = 60.f; // seconds
+    this->endCondition = 0;
+    this->endscreenPlayerName = "ANONYMOUS";
+}
+
+void Game::updatePointMulti() {
+    // Example logic: increase point multiplier based on difficulty modifiers
+    this->pointMulti = 1.0f + (0.1f * (this->maxEnemies - 3)); // Increase multiplier with more max enemies
+    this->pointMulti *= 1.0f + (0.1f * (this->settingEnemyHP - 3)); // Increase multiplier with higher enemy HP
+    this->pointMulti *= 1.0f + (50.0f-this->enemySpawnTimerMax)/200.0f; // Increase multiplier with faster spawn rate
+    this->pointMulti *= 1.0f + (this->baseEnemySpeed-2.0f)/4.0f; // Increase multiplier with faster enemy speed
+
+    if(this->pointMulti < 0.25f) this->pointMulti = 0.25f; 
+    if(this->pointMulti > 5.0f) this->pointMulti = 5.0f;
 }
 
 void Game::initWindow()
 {
-	videoMode.size = {800,600};
-	window = new sf::RenderWindow(videoMode, "Impact Bastion", sf::Style::Titlebar | sf::Style::Close);
-    window->setFramerateLimit(60);
+	this->videoMode.size = {800,600};
+	this->window = new sf::RenderWindow(this->videoMode, "Impact Bastion", sf::Style::Titlebar | sf::Style::Close);
+    this->window->setFramerateLimit(60);
 }
+
+void Game::initText() {
+    //Game 
+    this->pointCounter.setCharacterSize(24);
+    this->pointCounter.setFillColor(sf::Color::Yellow);
+    this->pointCounter.setString("NONE");
+    this->pointCounter.setPosition({ 10.f, 10.f });
+
+    this->textTimeLeft.setCharacterSize(24);
+    this->textTimeLeft.setFillColor(sf::Color::Cyan);
+    this->textTimeLeft.setString("Time Left: 60");
+    this->textTimeLeft.setPosition({ 10.f, 40.f });
+
+    //Menu
+    this->menuTextStart.setFont(this->font);
+    this->menuTextStart.setString("START GAME");
+    this->menuTextStart.setFillColor(sf::Color::Green);
+    this->menuTextStart.setCharacterSize(40);
+    this->menuTextStart.setPosition({ 260.f, 120.f });
+
+    this->menuTextSettings.setFont(this->font);
+    this->menuTextSettings.setString("SETTINGS");
+    this->menuTextSettings.setFillColor(sf::Color::Cyan);
+    this->menuTextSettings.setCharacterSize(40);
+    this->menuTextSettings.setPosition({ 290.f, 200.f });
+
+    this->menuTextStats.setFont(this->font);
+    this->menuTextStats.setString("STATS");
+    this->menuTextStats.setFillColor(sf::Color::Yellow);
+    this->menuTextStats.setCharacterSize(40);
+    this->menuTextStats.setPosition({ 320.f, 280.f });
+
+    this->menuTextExit.setFont(this->font);
+    this->menuTextExit.setString("EXIT");
+    this->menuTextExit.setFillColor(sf::Color::Red);
+    this->menuTextExit.setCharacterSize(40);
+    this->menuTextExit.setPosition({ 340.f, 450.f });
+
+    //Settings
+    this->menuTextPointMulti.setFont(this->font);
+    this->menuTextPointMulti.setFillColor(sf::Color::Cyan);
+    this->menuTextPointMulti.setPosition({ 230.f, 40.f });
+
+    this->menuTextGameTimeSetting.setFont(this->font);
+    this->menuTextGameTimeSetting.setPosition({ 50.f, 130.f });
+
+    this->menuTextEnemies.setFont(this->font);
+    this->menuTextEnemies.setPosition({ 50.f, 180.f });
+
+    this->menuTextHP.setFont(this->font);
+    this->menuTextHP.setPosition({ 50.f, 230.f });
+
+    this->menuTextSpawnRate.setFont(this->font);
+    this->menuTextSpawnRate.setPosition({ 50.f, 280.f });
+
+    this->menuTextEnemySpeed.setFont(this->font);
+    this->menuTextEnemySpeed.setPosition({ 50.f, 330.f });
+
+    this->menuTextVolume.setFont(this->font);
+    this->menuTextVolume.setPosition({ 50.f, 380.f });
+
+    this->menuTextBack.setFont(this->font);
+    this->menuTextBack.setString("BACK TO MENU");
+    this->menuTextBack.setFillColor(sf::Color::Yellow);
+    this->menuTextBack.setPosition({ 300.f, 500.f });
+
+    // Endscreen
+    this->endscreenMessage.setFont(this->font);
+    this->endscreenMessage.setCharacterSize(60);
+    this->endscreenMessage.setPosition({ 100.f, 100.f });
+
+    this->endscreenMessage2.setFont(this->font);
+    this->endscreenMessage2.setCharacterSize(30);
+    this->endscreenMessage2.setPosition({ 100.f, 200.f });
+
+    this->endscreenPoints.setFont(this->font);
+    this->endscreenPoints.setCharacterSize(30);
+    this->endscreenPoints.setPosition({ 100.f, 300.f });
+
+    this->endscreenNameInput.setFont(this->font);
+    this->endscreenNameInput.setString("NAME: ______");
+    this->endscreenNameInput.setCharacterSize(30);
+    this->endscreenNameInput.setPosition({ 100.f, 400.f });
+
+    this->endscreenMenuButton.setFont(this->font);
+    this->endscreenMenuButton.setString("SAVE AND RETURN");
+    this->endscreenMenuButton.setCharacterSize(30);
+    this->endscreenMenuButton.setFillColor(sf::Color::Yellow);
+    this->endscreenMenuButton.setPosition({ 250.f, 500.f });
+
+    //stats screen
+
+    this->statsTitle.setFont(this->font);
+    this->statsTitle.setString("LEADERBOARD");
+    this->statsTitle.setCharacterSize(40);
+    this->statsTitle.setPosition({ 270.f, 50.f });
+
+    this->statsNameList.setFont(this->font);
+    this->statsNameList.setString("NAME");
+    this->statsNameList.setCharacterSize(20);
+    this->statsNameList.setPosition({ 180.f, 120.f });
+
+    this->statsPointsList.setFont(this->font);
+    this->statsPointsList.setString("POINTS");
+    this->statsPointsList.setCharacterSize(20);
+    this->statsPointsList.setPosition({ 580.f, 120.f });
+
+    this->statsReturnButton.setFont(this->font);
+    this->statsReturnButton.setString("RETURN TO MENU");
+    this->statsReturnButton.setCharacterSize(30);
+    this->statsReturnButton.setFillColor(sf::Color::Yellow);
+    this->statsReturnButton.setPosition({ 280.f, 500.f });
+}
+
+void Game::initAudio() {
+    
+    if (!this->backgroundMusic.openFromFile("audio/music1.mp3")) {
+        std::cout << "ERROR: Can't load file music1.mp3" << std::endl;
+    }
+
+    
+    this->backgroundMusic.setLooping(true); // Loop
+    this->backgroundMusic.setVolume(5.f);  // Volume
+    this->backgroundMusic.play();           
+}
+
 
 void Game::initEnemies()
 {
-    enemy.setPosition(sf::Vector2f(10.f,10.f));
-    enemy.setSize(sf::Vector2f(100.f, 100.f));
-    enemy.setScale(sf::Vector2f(0.33f, 0.33f));
-    enemy.setFillColor(sf::Color::Yellow);
-    //enemy.setOutlineColor(sf::Color::Cyan);
-    //enemy.setOutlineThickness(3.f);
+    this->enemy.setPosition(sf::Vector2f(10.f, 10.f));
+    this->enemy.setSize(sf::Vector2f(100.f, 100.f));
+    this->enemy.setScale(sf::Vector2f(0.33f, 0.33f));
+    this->enemy.setFillColor(sf::Color::Yellow);
+    //this->enemy.setOutlineColor(sf::Color::Cyan);
+    //this->enemy.setOutlineThickness(3.f);
 }
 
+void Game::initPlayer() {
+    this->player.setRadius(15.f);
+    this->player.setFillColor(sf::Color::Blue);
+   
+    this->player.setPosition({ 400.f + 21.f, 570.f });
+}
+
+void Game::initBlocks() {
+    float startX = 310.f;
+    float groundY = 600.f;
+
+    for (int i = 0; i < 4; i++) {         // 4 columns
+        for (int j = 0; j < 10; j++) {     // 4 layers
+            if (j == 0 && (i == 1 || i == 2)) continue; // Space for player
+
+            int randomHP = (std::rand() % 3) + 1; // Random hp (1,2 or 3)
+            //block.sprite.setTexture(blockTextures[block.hp - 1]);
+
+            // Colours to hp
+            int textureIndex = 0;
+            Material mat = GLASS;
+
+            if (randomHP == 3) {
+                textureIndex = 3;
+                mat = STONE;
+            }
+            else if (randomHP == 2) {
+                textureIndex = 1;
+                mat = WOOD;
+            }
+            else {
+                textureIndex = 0;
+                mat = GLASS;
+            }
+
+            this->blocks.emplace_back(this->blockTextures[textureIndex], randomHP, mat);
+
+            this->blocks.back().sprite.setPosition({ startX + (i * 63.f), groundY - ((j + 1) * 32.f) });
+        }
+    }
+}
+void Game::updateBlockTexture(BlockData& block) {
+    // stone
+    if (block.material == Material::STONE) {
+        if (block.hp == 2)
+            block.sprite.setTexture(this->blockTextures[4]);
+        else if (block.hp == 1)
+            block.sprite.setTexture(this->blockTextures[5]);
+    }
+    // wood
+    else if (block.material == Material::WOOD) {
+        if (block.hp == 1)
+            block.sprite.setTexture(this->blockTextures[2]);
+    }
+    // glass
+    else {
+        block.sprite.setTexture(blockTextures[0]);
+    }
+}
+
+
 //Constructors / Destructors
-Game::Game():uiText(font) {
-    initFonts();
-    initText();
-	initVariables();
-	initWindow();
-    initEnemies();
-    
+Game::Game()
+    :pointCounter(this->font),
+    menuTextStart(this->font),
+    menuTextSettings(this->font),
+    menuTextStats(this->font),
+    menuTextExit(this->font),
+    menuTextPointMulti(this->font),
+    menuTextEnemies(this->font),
+    menuTextHP(this->font),
+    menuTextSpawnRate(this->font),
+    menuTextEnemySpeed(this->font),
+    menuTextVolume(this->font),
+    menuTextBack(this->font),
+    endscreenMessage(this->font),
+    endscreenMessage2(this->font),
+    endscreenPoints(this->font),
+    endscreenNameInput(this->font),
+    endscreenMenuButton(this->font),
+    menuTextGameTimeSetting(this->font),
+    statsTitle(this->font),
+    statsNameList(this->font),
+    statsPointsList(this->font),
+    statsReturnButton(this->font),
+    textTimeLeft(this->font)
+    {
+    this->initFonts();
+    this->initText();
+	this->initVariables();
+	this->initWindow();
+    this->initEnemies();
+    this->initPlayer();
+
+    if (!blockTextures[0].loadFromFile("./graphics/glass_redst.png"))
+        std::cout << "ERROR: glass_redst.png\n";
+
+    if (!blockTextures[1].loadFromFile("./graphics/wood_redst.png"))
+        std::cout << "ERROR: wood_redst.png\n";
+
+    if (!blockTextures[2].loadFromFile("./graphics/wood_b_redst.png"))
+        std::cout << "ERROR: wood_b_redst.png\n";
+
+    if (!blockTextures[3].loadFromFile("./graphics/stone_redst.png"))
+        std::cout << "ERROR: stone_redst.png\n";
+
+    if (!blockTextures[4].loadFromFile("./graphics/stone_b_redst.png"))
+        std::cout << "ERROR: stone_b_redst.png\n";
+
+    if (!blockTextures[5].loadFromFile("./graphics/stone_b2_redst.png"))
+        std::cout << "ERROR: stone_b2_redst.png\n";
+
+    if (!enemyTextures[0].loadFromFile("./graphics/ball.png"))
+        std::cout << "ERROR: ball.png\n";
+
+    if (!enemyTextures[1].loadFromFile("./graphics/ball_b.png"))
+        std::cout << "ERROR: ball_b.png\n";
+
+    if (!enemyTextures[2].loadFromFile("./graphics/ball_b2.png"))
+        std::cout << "ERROR: ball_b2.png\n";
+    this->initBlocks();
+    this->initAudio();
 }
 Game::~Game() {
-	delete window;
+	delete this->window;
 }
 
 
 //Accessors
 const bool Game::running() const
 {
-	return window->isOpen();
+	return this->window->isOpen();
 }
 
 
 
 //Functions
+
+void Game::bounceEnemy(EnemyData& enemy, BlockData& block) {
+    enemy.bounced = 1;
+
+    auto intersection = enemy.sprite.getGlobalBounds().findIntersection(block.sprite.getGlobalBounds());
+
+    if (intersection) {
+        sf::FloatRect overlap = *intersection;
+
+        if (overlap.size.x > overlap.size.y) { 
+            enemy.velocity.y *= -1.f; //bounce off a floor/ceiling
+            if (enemy.sprite.getPosition().y < block.sprite.getPosition().y) {
+                enemy.sprite.setPosition({enemy.sprite.getPosition().x, block.sprite.getGlobalBounds().position.y - enemy.sprite.getGlobalBounds().size.y});
+            } else {
+                enemy.sprite.setPosition({enemy.sprite.getPosition().x, block.sprite.getGlobalBounds().position.y + block.sprite.getGlobalBounds().size.y});
+            }
+        } else {
+            enemy.velocity.x *= -1.f; //bounce off a side
+            if (enemy.sprite.getPosition().x < block.sprite.getPosition().x) {
+                enemy.sprite.setPosition({block.sprite.getGlobalBounds().position.x - enemy.sprite.getGlobalBounds().size.x, enemy.sprite.getPosition().y});
+            } else {
+                enemy.sprite.setPosition({block.sprite.getGlobalBounds().position.x + block.sprite.getGlobalBounds().size.x, enemy.sprite.getPosition().y});
+            }
+        }
+    }
+}
+
 void Game::spawnEnemy()
 {
-    EnemyData newEnemy;
     //Spawn enemy
-    newEnemy.shape = enemy;
-    newEnemy.shape.setPosition({ 5.f,static_cast<float>(rand() % static_cast<int>(window->getSize().y - enemy.getSize().y)) });
-    newEnemy.shape.setFillColor(sf::Color::Green);
+    this->enemies.emplace_back(this->enemyTextures[0]);
 
     //HP points of enemy
-    newEnemy.hp = 3;
 
-    newEnemy.velocity = sf::Vector2f(2.f, 2.f);
-    
-    enemies.push_back(newEnemy);
+    auto& lastEnemy = this->enemies.back();
+    lastEnemy.sprite.setScale({ 1.6f, 1.6f });
+    lastEnemy.hp = this->settingEnemyHP;
+    lastEnemy.bounced = false;
 
+    float windowHeight = static_cast<float>(this->window->getSize().y);
+    float enemyHeight = lastEnemy.sprite.getGlobalBounds().size.y;
+    float posY = static_cast<float>(rand() % static_cast<int>(windowHeight - enemyHeight));
+
+    bool side = rand() % 2;
+    if(side) {
+        lastEnemy.sprite.setPosition({ 5.f, posY });
+        lastEnemy.velocity = sf::Vector2f(this->baseEnemySpeed, this->baseEnemySpeed);
+    }
+    else {
+        lastEnemy.sprite.setPosition({ static_cast<float>(this->window->getSize().x) - enemyHeight - 5.f, posY });
+        lastEnemy.velocity = sf::Vector2f(-this->baseEnemySpeed, this->baseEnemySpeed);
+    }
 }
 
 
 void Game::pollEvents()
 {
-    while (const auto event = window->pollEvent())
+    while (const auto event = this->window->pollEvent())
     {
 
         //Close window through bar
         if (event->is<sf::Event::Closed>())
         {
-            window->close();
+            this->window->close();
         }
+        //Text input
+        if (const auto* textEntered = event->getIf<sf::Event::TextEntered>()) {
+            if (this->activeSetting != ActiveSetting::NONE) {
+                uint32_t unicode = textEntered->unicode;
+
+                if (unicode == 8) { // Backspace 
+                    if (!this->inputBuffer.empty()) this->inputBuffer.pop_back();
+                }
+                else if (unicode == 13 || unicode == 10) { // Enter
+                    this->activeSetting = ActiveSetting::NONE;
+                    this->inputBuffer.clear();
+                }
+                else if (this->activeSetting == ActiveSetting::NAME) { // Only letters and underscore for name
+                    if (this->inputBuffer.size() < 16) {
+                        if ((unicode >= 'A' && unicode <= 'Z') || (unicode >= 'a' && unicode <= 'z') || unicode == '_')
+                        this->inputBuffer += static_cast<char>(unicode);
+                    }
+                }
+                else if (unicode >= '0' && unicode <= '9') { // Only numbers for other settings
+                    if (this->inputBuffer.size() < 3) { // Limit 
+                        this->inputBuffer += static_cast<char>(unicode);
+                    }
+                }
+            }
+        }
+
         //Check if the event is a key press
         if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
         {
-            //Close window through pressing Esc
+            //end the game and go to menu on escape
             if (keyPressed->code == sf::Keyboard::Key::Escape)
             {
-                window->close();
+                this->endCondition = END_GIVE_UP;
+                endGameScreen();
             }
         }
     }
@@ -110,103 +429,292 @@ void Game::pollEvents()
 void Game::updateMousePositions()
 {
     //Mouse position relative to window
-    mousePosWindow = sf::Mouse::getPosition(*window);
-    mousePosView = window->mapPixelToCoords(mousePosWindow);
+    this->mousePosWindow = sf::Mouse::getPosition(*this->window);
+    this->mousePosView = this->window->mapPixelToCoords(this->mousePosWindow);
 
 }
+
+void Game::updateMenu() 
+{
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+        if (!this->mouseHeld) {
+            this->mouseHeld = true;
+            if (this->menuTextStart.getGlobalBounds().contains(this->mousePosView)) {
+                this->timeLeft = baseTimeLeft;
+                this->screen = SCREEN_GAME;
+            }
+            else if (this->menuTextSettings.getGlobalBounds().contains(this->mousePosView)) {
+                this->screen = SCREEN_SETTINGS;
+            }
+            else if( this->menuTextStats.getGlobalBounds().contains(this->mousePosView)) {
+                this->loadStatsScreen();
+                this->screen = SCREEN_STATS;
+            }
+            else if (this->menuTextExit.getGlobalBounds().contains(this->mousePosView)) {
+                this->window->close();
+            }
+        }
+    }
+    else {
+        this->mouseHeld = false;
+    }
+}
+
+void Game::updateSettings() {
+    this->menuTextPointMulti.setFillColor(sf::Color::Cyan);
+    this->menuTextGameTimeSetting.setFillColor(sf::Color::White);
+    this->menuTextEnemies.setFillColor(sf::Color::White);
+    this->menuTextHP.setFillColor(sf::Color::White);
+    this->menuTextSpawnRate.setFillColor(sf::Color::White);
+    this->menuTextEnemySpeed.setFillColor(sf::Color::White);
+    this->menuTextVolume.setFillColor(sf::Color::White);
+
+    //Update value from buffer
+    if (!this->inputBuffer.empty()) {
+        int val = std::stoi(this->inputBuffer);
+
+        if (this->activeSetting == ActiveSetting::TIME) {
+            this->baseTimeLeft = static_cast<float>(val);
+            if (this->baseTimeLeft < 10.f) {
+                this->baseTimeLeft = 10.f;
+            } else if (this->baseTimeLeft > 600.f) {
+                this->baseTimeLeft = 600.f;
+            }
+        }
+        if (this->activeSetting == ActiveSetting::ENEMIES) {
+            this->maxEnemies = val;
+            if (this->maxEnemies < 1) {
+                this->maxEnemies = 1;
+            }
+            else if (this->maxEnemies > 10) {
+                this->maxEnemies = 10;
+            }
+        }
+        if (this->activeSetting == ActiveSetting::HP) {
+            this->settingEnemyHP = val;
+            if (this->settingEnemyHP <1) {
+                this->settingEnemyHP = 1;
+            }
+            else if (this->settingEnemyHP > 20) {
+                this->settingEnemyHP = 20;
+            }
+        }
+        if (this->activeSetting == ActiveSetting::SPAWNRATE) {
+            this->enemySpawnTimerMax = val;
+            if (this->enemySpawnTimerMax < 1) {
+                this->enemySpawnTimerMax = 1;
+            } else if (this->enemySpawnTimerMax > 200) {
+                this->enemySpawnTimerMax = 200;
+            }
+        }
+        if (this->activeSetting == ActiveSetting::BASESPEED) {
+            this->baseEnemySpeed = val;
+            if (this->baseEnemySpeed < 1) {
+                this->baseEnemySpeed = 1;
+            } else if (this->baseEnemySpeed > 10) {
+                this->baseEnemySpeed = 10;
+            }
+        }
+        if (this->activeSetting == ActiveSetting::HP) {
+            this->settingEnemyHP = val;
+            if (this->settingEnemyHP <1) {
+                this->settingEnemyHP = 1;
+            }
+        }
+        if (this->activeSetting == ActiveSetting::VOLUME) {
+            this->settingVolume = static_cast<float>(val);
+            if (this->settingVolume > 100.f) {
+                this->settingVolume = 100.f;
+            }
+            this->backgroundMusic.setVolume(this->settingVolume);
+        }
+        updatePointMulti();
+    }
+
+    //Highlighting the active field
+    if (this->activeSetting == ActiveSetting::TIME) {
+        this->menuTextGameTimeSetting.setFillColor(sf::Color::Yellow);
+    }
+    if (this->activeSetting == ActiveSetting::ENEMIES) {
+        this->menuTextEnemies.setFillColor(sf::Color::Yellow);
+    }
+    if (this->activeSetting == ActiveSetting::HP) {
+        this->menuTextHP.setFillColor(sf::Color::Yellow);
+    }
+    if (this->activeSetting == ActiveSetting::SPAWNRATE) {
+        this->menuTextSpawnRate.setFillColor(sf::Color::Yellow);
+    }
+    if (this->activeSetting == ActiveSetting::BASESPEED) {
+        this->menuTextEnemySpeed.setFillColor(sf::Color::Yellow);
+    }
+    if (this->activeSetting == ActiveSetting::VOLUME) {
+        this->menuTextVolume.setFillColor(sf::Color::Yellow);
+    }
+
+    this->menuTextPointMulti.setString("POINT MULTIPLIER: x" + std::to_string(this->pointMulti).substr(0,4));
+    this->menuTextGameTimeSetting.setString("GAME TIME: " + std::to_string((int)this->baseTimeLeft) + "s");
+    this->menuTextEnemies.setString("MAX ENEMIES: " + std::to_string(this->maxEnemies));
+    this->menuTextHP.setString("ENEMY HP: " + std::to_string(this->settingEnemyHP));
+    this->menuTextSpawnRate.setString("ENEMY SPAWN CD: " + std::to_string((int)this->enemySpawnTimerMax));
+    this->menuTextEnemySpeed.setString("ENEMY SPEED: " + std::to_string((int)this->baseEnemySpeed));
+    this->menuTextVolume.setString("VOLUME: " + std::to_string((int)this->settingVolume));
+
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+        if (!this->mouseHeld) {
+            this->mouseHeld = true;
+            this->inputBuffer.clear();
+
+            if (this->menuTextGameTimeSetting.getGlobalBounds().contains(this->mousePosView)) {
+                this->activeSetting = ActiveSetting::TIME;
+            }
+            else if (this->menuTextEnemies.getGlobalBounds().contains(this->mousePosView)) {
+                this->activeSetting = ActiveSetting::ENEMIES;
+            }
+            else if (this->menuTextHP.getGlobalBounds().contains(this->mousePosView)) {
+                this->activeSetting = ActiveSetting::HP;
+            }
+            else if (this->menuTextSpawnRate.getGlobalBounds().contains(this->mousePosView)) {
+                this->activeSetting = ActiveSetting::SPAWNRATE;
+            }
+            else if (this->menuTextEnemySpeed.getGlobalBounds().contains(this->mousePosView)) {
+                this->activeSetting = ActiveSetting::BASESPEED;
+            }
+            else if (this->menuTextVolume.getGlobalBounds().contains(this->mousePosView)) {
+                this->activeSetting = ActiveSetting::VOLUME;
+            }
+            else if (this->menuTextBack.getGlobalBounds().contains(this->mousePosView)) {
+                this->activeSetting = ActiveSetting::NONE;
+                this->screen = SCREEN_MENU;
+            }
+        }
+    }
+    else {
+        this->mouseHeld = false;
+    }
+}
+
+
 
 void Game::updateEnemies()
 {
     //Updating the timer for enemy spawing
-    if (enemies.size() < maxEnemies) {
-        if (enemySpawnTimer >= enemySpawnTimerMax) {
+    if (this->enemies.size() < this->maxEnemies) {
+        if (this->enemySpawnTimer >= this->enemySpawnTimerMax) {
 
             //Spawn enemy and reset timer
-            spawnEnemy();
-            enemySpawnTimer = 0.f;
+            this->spawnEnemy();
+            this->enemySpawnTimer = 0.f;
         }
         else {
-            enemySpawnTimer += 1.f;
+            this->enemySpawnTimer += 1.f;
         }
     }
 
     //Moving and updating enemies
 
-    for (int i = 0; i< enemies.size();) {
+    for (int i = 0; i < this->enemies.size();) {
         bool hitWall = false;
-        enemies[i].shape.move(enemies[i].velocity);
-        
-        sf::Vector2f pos = enemies[i].shape.getPosition();
-        sf::Vector2f size = {
-            enemies[i].shape.getSize().x * enemies[i].shape.getScale().x,
-            enemies[i].shape.getSize().y * enemies[i].shape.getScale().y,
+        this->enemies[i].velocity.y += this->gravityStrength*this->baseEnemySpeed / 10.f;
+        this->enemies[i].sprite.move(this->enemies[i].velocity);
 
-        };
+        sf::Vector2f pos = this->enemies[i].sprite.getPosition();
+        sf::FloatRect bounds = this->enemies[i].sprite.getGlobalBounds();
+        sf::Vector2f size = { bounds.size.x, bounds.size.y };
 
-        sf::Vector2f offset = {
+        //Collison with blocks
+        for (size_t b = 0; b < this->blocks.size(); b++) {
+            if (this->enemies[i].sprite.getGlobalBounds().findIntersection(this->blocks[b].sprite.getGlobalBounds())) {
 
-            enemies[i].shape.getOrigin().x * enemies[i].shape.getScale().x,
-            enemies[i].shape.getOrigin().y * enemies[i].shape.getScale().y
+                if (!this->enemies[i].bounced) {
+                    bounceEnemy(this->enemies[i], this->blocks[b]);
+                    this->enemies[i].bounced = true;
+                    this->enemies[i].hp -= 1;    
+                }
 
-        };
+                // Damage block
+                this->blocks[b].hp -= 1;
+                this->updateBlockTexture(this->blocks[b]);
+                
+
+                if (this->enemies[i].hp <= this->settingEnemyHP / 3)
+                    this->enemies[i].sprite.setTexture(this->enemyTextures[2]);
+                else if (this->enemies[i].hp <= this->settingEnemyHP * 2 / 3)
+                    this->enemies[i].sprite.setTexture(this->enemyTextures[1]);
+
+
+                // Destroy block
+                if (this->blocks[b].hp <= 0) {
+                    this->blocks.erase(this->blocks.begin() + b);
+                }
+
+                // Damage enemy
+
+                break; 
+            }
+        }
+        this->enemies[i].bounced = false; // Reset bounced for next frame
+
+        //Collision with player
+        if (this->enemies[i].sprite.getGlobalBounds().findIntersection(this->player.getGlobalBounds())) {
+            this->endCondition = END_HIT;
+            endGameScreen();
+        }
+
+
+
 
         //Bouncing from top and bottom
-        if ((pos.y - offset.y) <= 0.f) { //top
-            enemies[i].velocity.y *= -1.05f; 
-            enemies[i].shape.setOrigin({enemies[i].shape.getSize().x * 0.5f, 0.0f});
-            enemies[i].shape.setPosition({ pos.x + (size.x * 0.5f * SIGN(enemies[i].velocity.x)), 0.0f });
-            enemies[i].shape.setScale({ 0.45f, 0.25f }); // Squash effect
-            hitWall = true;
+        if (pos.y <= 0.f) { //top
+            this->enemies[i].velocity.y *= -1.05f; 
+            this->enemies[i].sprite.setPosition({ pos.x, 0.f });
+            this->enemies[i].sprite.setScale({ 1.9f, 1.3f }); // Squash effect
+            
         }
-        else if ((pos.y - offset.y + size.y) >= window->getSize().y) { //bottom
-            enemies[i].velocity.y *= -1.05f;
-            enemies[i].shape.setOrigin({enemies[i].shape.getSize().x * 0.5f, enemies[i].shape.getSize().y});
-            enemies[i].shape.setPosition({ pos.x + (size.x * 0.5f * SIGN(enemies[i].velocity.x)), window->getSize().y});
-            enemies[i].shape.setScale({ 0.45f, 0.25f });
-            hitWall = true;
+        else if (pos.y + size.y >= this->window->getSize().y) { //bottom
+            this->enemies[i].velocity.y *= -1.05f;
+            this->enemies[i].sprite.setPosition({ pos.x, this->window->getSize().y - size.y });
+            this->enemies[i].sprite.setScale({ 1.9f, 1.3f });
+            
         }
 
         //Sides
-        if ((pos.x - offset.x) <= 0.f) { // Left
-            enemies[i].velocity.x *= -1.05f;
-            enemies[i].shape.setOrigin({0.0f, enemies[i].shape.getSize().y * 0.5f});
-            enemies[i].shape.setPosition({ 0.f, pos.y + (size.y * 0.5f * SIGN(enemies[i].velocity.y))});
-            enemies[i].shape.setScale({ 0.25f, 0.45f });
-            hitWall = true;
+        if (pos.x <= 0.f) { // Left
+            this->enemies[i].velocity.x *= -1.05f;
+            this->enemies[i].sprite.setPosition({ 0.f, pos.y });
+            this->enemies[i].sprite.setScale({ 1.3f, 1.9f });
+            
         }
-        else if ((pos.x - offset.x + size.x) >= window->getSize().x) { // Right
-            enemies[i].velocity.x *= -1.05f;
-            enemies[i].shape.setOrigin({enemies[i].shape.getSize().x, enemies[i].shape.getSize().y * 0.5f});
-            enemies[i].shape.setPosition({ window->getSize().x, pos.y + (size.y * 0.5f * SIGN(enemies[i].velocity.y))});
-            enemies[i].shape.setScale({ 0.25f, 0.45f });
-            hitWall = true;
+        else if (pos.x + size.x >= this->window->getSize().x) { // Right
+            this->enemies[i].velocity.x *= -1.05f;
+            this->enemies[i].sprite.setPosition({ this->window->getSize().x - size.x, pos.y });
+            this->enemies[i].sprite.setScale({ 1.3f, 1.9f });
+            
         }
 
 
         //Squash & Stretch
-        sf::Vector2f currentScale = enemies[i].shape.getScale();
-        float targetScale = 0.33f; // from initEnemies
-        float recoverySpeed = 0.01f;
+        sf::Vector2f currentScale = this->enemies[i].sprite.getScale();
+        float targetScale = 1.6f; // from initEnemies
+        float recoverySpeed = 0.05f;
 
         if (currentScale.x < targetScale) currentScale.x += recoverySpeed;
         if (currentScale.x > targetScale) currentScale.x -= recoverySpeed;
         if (currentScale.y < targetScale) currentScale.y += recoverySpeed;
         if (currentScale.y > targetScale) currentScale.y -= recoverySpeed;
-        enemies[i].shape.setScale(currentScale);
+        this->enemies[i].sprite.setScale(currentScale);
 
 
         if (hitWall) {
-            enemies[i].hp -= 1;
+            this->enemies[i].hp -= 1;
 
-            if (enemies[i].hp == 2) {
-                enemies[i].shape.setFillColor(sf::Color::Yellow);
-            }
-            if (enemies[i].hp == 1) {
-                enemies[i].shape.setFillColor(sf::Color::Red);
-            }
+                if (this->enemies[i].hp <= this->settingEnemyHP / 3)
+                    this->enemies[i].sprite.setTexture(this->enemyTextures[2]);
+                else if (this->enemies[i].hp <= this->settingEnemyHP * 2 / 3)
+                    this->enemies[i].sprite.setTexture(this->enemyTextures[1]);
+
         }
-        if (enemies[i].hp <= 0) {
-            enemies.erase(enemies.begin() + i);
+        if (this->enemies[i].hp <= 0) {
+            this->enemies.erase(this ->enemies.begin() + i);
         }
         else {
             i++;
@@ -217,28 +725,26 @@ void Game::updateEnemies()
 
     //Check if clicked upon
     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-        if (mouseHeld == false) {
-            mouseHeld = true;
+        if (this->mouseHeld == false) {
+            this->mouseHeld = true;
             
-            for (int i = 0; i < enemies.size(); i ++) {
-                if (enemies[i].shape.getGlobalBounds().contains(mousePosView)) {
+            for (int i = 0; i < this->enemies.size(); i ++) {
+                if (this->enemies[i].sprite.getGlobalBounds().contains(this->mousePosView)) {
 
-                    enemies[i].hp -= 1;
-
-
-                    if (enemies[i].hp == 2) {
-                        enemies[i].shape.setFillColor(sf::Color::Yellow);
-                    }
-                    else if (enemies[i].hp == 1) {
-                        enemies[i].shape.setFillColor(sf::Color::Red);
-                    }
+                    this->enemies[i].hp -= 1;
 
 
-                    if (enemies[i].hp <= 0) {
-                        enemies.erase(enemies.begin() + i);
+                    if (this->enemies[i].hp <= this->settingEnemyHP / 3)
+                        this->enemies[i].sprite.setTexture(this->enemyTextures[2]);
+                    else if (this->enemies[i].hp <= this->settingEnemyHP * 2 / 3)
+                        this->enemies[i].sprite.setTexture(this->enemyTextures[1]);
+
+
+                    if (this->enemies[i].hp <= 0) {
+                        this->enemies.erase(this->enemies.begin() + i);
 
                         // Gain points after destroy
-                        points += 10;
+                        this->points += 10*this->pointMulti;
                     }
 
 
@@ -247,62 +753,264 @@ void Game::updateEnemies()
             }
         }
     }else {
-        mouseHeld = false;
+        this->mouseHeld = false;
     }
     
 
     
 }
 
+void Game::endGameScreen() {
+    this->screen = SCREEN_END;
+
+    this->endscreenMessage.setString("GAME OVER");
+
+    switch(this->endCondition) {
+        case END_TIME:
+            this->endscreenMessage2.setString("YOU SURVIVED! x1.5 BONUS!");
+            this->points = static_cast<int>(this->points * 1.5f);
+            this->endscreenMessage2.setFillColor(sf::Color::Green);
+            this->endscreenMessage.setString("CONGRATULATIONS!");
+            this->endscreenMessage.setFillColor(sf::Color::Green);
+            break;
+        case END_HIT:
+            this->endscreenMessage2.setString("YOU WERE HIT!");
+            this->endscreenMessage2.setFillColor(sf::Color::Red);
+            this->endscreenMessage.setFillColor(sf::Color::Red);
+            break;
+        case END_GIVE_UP:
+            this->endscreenMessage2.setString("YOU GAVE UP!");
+            this->endscreenMessage2.setFillColor(sf::Color::White);
+            this->endscreenMessage.setFillColor(sf::Color::White);
+            break;
+        default:
+            this->endscreenMessage2.setString("WAIT... WHAT?");
+    }
+
+    this->endscreenPoints.setString("Total Points: " + std::to_string(this->points));
+}
+
+void saveScoreToFile(const std::string& name, int score) {
+
+    //load contents of gameData/scores.txt into vector (each line starts from score then name)
+    std::vector<std::pair<int, std::string>> scores;
+    std::ifstream inputFile("scores.txt");
+    if (inputFile.is_open()) {
+        std::string line;
+        while (std::getline(inputFile, line)) {
+            std::istringstream iss(line);
+            int s;
+            std::string n;
+            if (iss >> s >> n) {
+                scores.emplace_back(s, n);
+            }
+        }
+        inputFile.close();
+    }
+
+    //sort the scores in descending order
+    scores.emplace_back(score, name);
+    std::sort(scores.begin(), scores.end(), [](const auto& a, const auto& b) {
+        return a.first > b.first;
+    });
+    //keep only top 10 scores and write back to file
+    std::ofstream outputFile("scores.txt");
+    if (outputFile.is_open()) {
+        for (size_t i = 0; i < scores.size() && i < 10; ++i) {
+            outputFile << scores[i].first << " " << scores[i].second << "\n";
+        }
+        outputFile.close();
+    }
+    
+}
+
+void Game::endscreenUpdate() {
+
+        //handle endscreen buttons
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+            if (!this->mouseHeld) {
+                this->mouseHeld = true;
+                this->inputBuffer.clear();
+
+                if (this->endscreenMenuButton.getGlobalBounds().contains(this->mousePosView)) {
+                    
+                    //save score to file
+                    if( this->endscreenPlayerName.empty()) {
+                        this->endscreenPlayerName = "ANONYMOUS";
+                    }
+                    saveScoreToFile(this->endscreenPlayerName, this->points);
+                    // Reset game state
+                    this->points = 0;
+                    this->enemies.clear();
+                    this->blocks.clear();
+                    this->initBlocks();
+                    this->screen = SCREEN_MENU;
+
+                }
+                else if (this->endscreenNameInput.getGlobalBounds().contains(this->mousePosView)) {
+                    // Activate name input
+                    this->activeSetting = ActiveSetting::NAME;
+                }
+                else {
+                    this->activeSetting = ActiveSetting::NONE;
+                }
+            }
+        }
+        else {
+            this->mouseHeld = false;
+        }
+    
+    // get player name input
+        std::string val = this->inputBuffer;
+        if (this->activeSetting == ActiveSetting::NAME) {
+            this->endscreenPlayerName = val;
+            this->endscreenNameInput.setString("ENTER YOUR NAME: " + this->endscreenPlayerName + "_");
+            this->endscreenNameInput.setFillColor(sf::Color::Yellow);
+        }
+        else {
+            this->activeSetting = ActiveSetting::NONE;
+            this->endscreenNameInput.setString("ENTER YOUR NAME: " + this->endscreenPlayerName);
+            this->endscreenNameInput.setFillColor(sf::Color::White);   
+        }
+
+
+}
+
+void Game::loadStatsScreen() {
+    //load scores from file
+    std::ifstream inputFile("scores.txt");
+    std::string names;
+    std::string points;
+    if (inputFile.is_open()) {
+        std::string line;
+        while (std::getline(inputFile, line)) {
+            std::istringstream iss(line);
+            int s;
+            std::string n;
+            if (iss >> s >> n) {
+                names += n + "\n";
+                points += std::to_string(s) + "\n";
+            }
+        }
+        inputFile.close();
+    }
+    this->statsNameList.setString(names);
+    this->statsPointsList.setString(points);
+
+}
+
+void Game::UpdateStatsScreen() {
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+        if (!this->mouseHeld) {
+            this->mouseHeld = true;
+            if (this->statsReturnButton.getGlobalBounds().contains(this->mousePosView)) {
+                this->screen = SCREEN_MENU;
+            }
+        }
+    }
+    else {
+        this->mouseHeld = false;
+    }
+}
 
 void Game::update()
 {
-    pollEvents();
-    updateMousePositions();
-    updateEnemies();
+    this->pollEvents();
+    this->updateMousePositions();
+    
 
-    //Update points
-    std::stringstream ss;
-    ss << "Points: " << points;
-    uiText.setString(ss.str());
-  
+
+    if (this->screen == SCREEN_MENU) {
+        this->updateMenu();
+    }
+    else if (this->screen == SCREEN_SETTINGS) {
+        this->updateSettings();
+    }
+    else if (this->screen == SCREEN_GAME) {
+
+        this->updateEnemies();
+        this->timeLeft -= 1.f/60.f;
+        if(timeLeft <= 0.f) {
+            this->timeLeft = 0.f;
+            this->endCondition = END_TIME;
+            endGameScreen();
+        }
+        
+        std::stringstream ss;
+        ss << "Points: " << this->points;
+        this->pointCounter.setString(ss.str());
+        std::stringstream ss2;
+        ss2 << "Time Left: " << round(this->timeLeft * 10.f) / 10.f; 
+        this->textTimeLeft.setString(ss2.str()); 
+    }
+    else if (this->screen == SCREEN_END) {
+        this->endscreenUpdate();
+    }
+    else if (this->screen == SCREEN_STATS) {
+        this->UpdateStatsScreen();
+    }
 }
+
+
 
 void Game::renderEnemies()
 {
-    bool debug = false;
     //Rendering all the enemies
-    for (auto& e : enemies) {
-        window->draw(e.shape);
-
-        if(debug){
-            sf::RectangleShape boundingbox;
-            boundingbox.setSize(e.shape.getSize());
-            boundingbox.setScale(e.shape.getScale());
-            boundingbox.setPosition(e.shape.getPosition() - sf::Vector2f{e.shape.getOrigin().x * e.shape.getScale().x, e.shape.getOrigin().y * e.shape.getScale().y});
-            boundingbox.setFillColor({0, 0, 0, 0});
-            boundingbox.setOutlineColor({0, 0, 255});
-            boundingbox.setOutlineThickness(2.f);
-            window->draw(boundingbox);
-
-            sf::RectangleShape originmarker({2.f, 2.f});
-            originmarker.setFillColor({255, 0, 255});
-            originmarker.setPosition(e.shape.getTransform().transformPoint(e.shape.getOrigin()));
-            window->draw(originmarker);
-        }
+    for (auto& e : this->enemies) {
+        this->window->draw(e.sprite);
     }
+
 }
 
 void Game::render()
 {
-    window->clear();
+    this->window->clear();
 
+    switch(this->screen){
+        case SCREEN_GAME:
+            //Draw game objects
+            this->renderEnemies();
 
-    //Draw game objects
-    renderEnemies();
+            for (auto& b : this->blocks) {
+                this->window->draw(b.sprite);
+            }
 
-    window->draw(uiText);
+            this->window->draw(this->player);
 
+            this->window->draw(this->pointCounter);
+            this->window->draw(this->textTimeLeft);
+        break;    
+        case SCREEN_MENU:
+            this->window->draw(this->menuTextStart);
+            this->window->draw(this->menuTextSettings);
+            this->window->draw(this->menuTextStats);
+            this->window->draw(this->menuTextExit);
+        break;
+        case SCREEN_END:
+            this->window->draw(this->endscreenMessage);
+            this->window->draw(this->endscreenMessage2);
+            this->window->draw(this->endscreenPoints);
+            this->window->draw(this->endscreenNameInput);
+            this->window->draw(this->endscreenMenuButton);
+        break;
+        case SCREEN_SETTINGS:
+            this->window->draw(this->menuTextPointMulti);
+            this->window->draw(this->menuTextGameTimeSetting);
+            this->window->draw(this->menuTextEnemies);
+            this->window->draw(this->menuTextHP);
+            this->window->draw(this->menuTextSpawnRate);
+            this->window->draw(this->menuTextEnemySpeed);
+            this->window->draw(this->menuTextVolume);
+            this->window->draw(this->menuTextBack);
+            break;
+        case SCREEN_STATS:
+            this->window->draw(this->statsTitle);
+            this->window->draw(this->statsNameList);
+            this->window->draw(this->statsPointsList);
+            this->window->draw(this->statsReturnButton);
+            break;
+        default: this->screen = SCREEN_GAME;
+    }
 
-    window->display();
+    this->window->display();
 }

@@ -8,22 +8,34 @@ add_executable(Impact-Bastion impact_bastion/main.cpp impact_bastion/Game.cpp)
 
 target_include_directories(Impact-Bastion PRIVATE SFML-3.0.2/include impact_bastion)
 
-target_link_directories(Impact-Bastion PRIVATE SFML-3.0.2/lib)
+find_package(SFML 3.0 REQUIRED COMPONENTS Graphics Window System Audio)
+
 target_link_libraries(Impact-Bastion PRIVATE 
                                      sfml-graphics
                                      sfml-system
-                                     sfml-window)
+                                     sfml-window
+                                     sfml-audio)
 
 set(EXECUTABLE_RESOURCES_DIR "${CMAKE_SOURCE_DIR}/impact_bastion/resources")
 
+set(FINAL_BINARY_DIR "${CMAKE_BINARY_DIR}/$<IF:$<BOOL:$<CONFIG>>,$<CONFIG>,.>")
+
 add_custom_command(TARGET Impact-Bastion POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${FINAL_BINARY_DIR}/graphics"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${FINAL_BINARY_DIR}/audio"
+
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${EXECUTABLE_RESOURCES_DIR}/Roboto-Bold.ttf" "${CMAKE_BINARY_DIR}/$<CONFIG>"
+    "${EXECUTABLE_RESOURCES_DIR}/*.ttf" "${FINAL_BINARY_DIR}/"
+    "${EXECUTABLE_RESOURCES_DIR}/*.txt" "${FINAL_BINARY_DIR}/"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${EXECUTABLE_RESOURCES_DIR}/audio/*" "${FINAL_BINARY_DIR}/audio"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${EXECUTABLE_RESOURCES_DIR}/graphics/*" "${FINAL_BINARY_DIR}/graphics"
 )
 
 if (MSVC)
     add_custom_command(TARGET Impact-Bastion POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-        "${EXECUTABLE_RESOURCES_DIR}/$<CONFIG>" "${CMAKE_BINARY_DIR}/$<CONFIG>"
+        "${EXECUTABLE_RESOURCES_DIR}/$<CONFIG>" "${FINAL_BINARY_DIR}/$<CONFIG>"
     )
 endif()
